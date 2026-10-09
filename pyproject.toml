@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 license = { text = "AGPL-3.0-only" }
 dependencies = [
     "typer>=0.12",
-    "paramiko>=3.4,<5",
+    "paramiko>=3.4,<6",
     "rich>=13.7",
     "pydantic[email]>=2.6",
     "jinja2>=3.1",
