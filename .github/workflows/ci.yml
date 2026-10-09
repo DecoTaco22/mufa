@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Solo lee el código: un PR de un desconocido no puede escribir en el repositorio.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - run: uv sync --all-groups
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy src/mufa
+      - run: uv run pytest
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+      - run: npm ci --no-fund
+        working-directory: web
+      - name: Tipos y compilación
+        run: npm run build
+        working-directory: web
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: web
+
+  dependencias:
+    # Vulnerabilidades conocidas en las dependencias que se instalan en producción.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - run: uv export --frozen --no-dev --no-hashes --no-emit-project -o requisitos.txt
+      # GHSA-r374-rxx8-8654 (paramiko 4 permite RSA con SHA-1): mufa lo apaga por
+      # defecto y solo lo usa si el equipo no sabe otra cosa. Ver docs/SEGURIDAD.md.
+      - run: uvx pip-audit --requirement requisitos.txt --no-deps --disable-pip --strict --ignore-vuln GHSA-r374-rxx8-8654
+
+  docker:
+    # La instalación tal como la hace un cliente: imagen, Caddy con HTTPS,
+    # crear el admin e iniciar sesión.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: docker compose up -d --build
+      - name: Esperar a que responda por HTTPS
+        run: |
+          for intento in $(seq 1 30); do
+            curl -kfs https://localhost/api/v1/salud && exit 0
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - name: Crear admin e iniciar sesión
+        run: |
+          echo 'clave-de-prueba-del-ci' | docker compose exec -T mufa \
+            mufa crear-admin --usuario admin --nombre CI --password-stdin
+          curl -kfs -X POST https://localhost/api/v1/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"usuario":"admin","password":"clave-de-prueba-del-ci"}' | grep -q '"token"'
+      - name: La app web se sirve con su política de seguridad
+        run: |
+          curl -ksf https://localhost/equipos | grep -q '<div id="raiz">'
+          curl -ksI https://localhost/ | grep -qi "^content-security-policy: default-src 'self'"
+      - name: La terminal (WebSocket) pasa por Caddy y exige sesión
+        run: |
+          codigo=$(curl -ks -o /dev/null -w '%{http_code}' --http1.1             -H 'Connection: Upgrade' -H 'Upgrade: websocket'             -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ=='             https://localhost/api/v1/terminal)
+          echo "sin sesión: $codigo"
+          test "$codigo" = 403
+      - name: Las herramientas tienen ping y traceroute
+        run: docker compose exec -T mufa sh -c 'command -v ping && command -v traceroute'
+      - name: Cabeceras de seguridad
+        run: |
+          curl -ksI https://localhost/api/v1/salud | tee cabeceras.txt
+          grep -qi '^strict-transport-security:' cabeceras.txt
+          grep -qi '^x-frame-options: DENY' cabeceras.txt
+          ! grep -qi '^server:' cabeceras.txt
+      - if: always()
+        run: docker compose down -v

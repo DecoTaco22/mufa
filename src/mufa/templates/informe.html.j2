@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Informe mufa{% if host %} — {{ host }}{% endif %}</title>
+<style>
+  body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; color: #111; }
+  h1 { font-size: 1.4rem; }
+  .hallazgo { border-left: 4px solid #999; padding: 0.5rem 1rem; margin: 1rem 0; }
+  .hallazgo.crítico, .hallazgo.alto { border-color: #b3261e; }
+  .hallazgo.medio { border-color: #7d5260; }
+  .hallazgo.info { border-color: #4a6b57; }
+  .severidad { text-transform: uppercase; font-size: 0.8rem; font-weight: bold; }
+  code, pre { font-family: "IBM Plex Mono", monospace; background: #f4f4f4; padding: 0.1rem 0.3rem; }
+  pre { padding: 0.6rem; overflow-x: auto; }
+</style>
+</head>
+<body>
+  <h1>Informe mufa{% if host %} — {{ host }}{% endif %}</h1>
+  <p>{{ hallazgos | length }} hallazgo(s).</p>
+
+  {% for h in hallazgos %}
+  <div class="hallazgo {{ h.severidad.value }}">
+    <div class="severidad">{{ h.severidad.value }} · {{ h.id }}</div>
+    <h2>{{ h.titulo }}</h2>
+    <p><strong>Qué pasa:</strong> {{ h.evidencia }}</p>
+    <p><strong>Qué puede provocar:</strong> {{ h.impacto }}</p>
+    <p><strong>Cómo se arregla:</strong></p>
+    <pre>{{ h.remediacion | join('\n') }}</pre>
+  </div>
+  {% else %}
+  <p>No se detectaron hallazgos con las verificaciones disponibles.</p>
+  {% endfor %}
+</body>
+</html>

@@ -1,0 +1,12 @@
+mufa para macOS (Apple Silicon)
+===============================
+
+1. Arrastra mufa.app a la carpeta Aplicaciones.
+2. La primera vez, macOS la bloquea porque todavía no está firmada:
+   clic derecho sobre mufa.app → Abrir → Abrir.
+   (Si no aparece la opción: Ajustes del Sistema → Privacidad y seguridad
+   → "Abrir igualmente".)
+3. La primera vez, crea tu cuenta de administrador.
+
+Tus datos quedan en ~/.mufa. mufa solo escucha en esta computadora.
+Para que entre tu equipo de trabajo, instálalo en un servidor (mufa-servidor.zip).

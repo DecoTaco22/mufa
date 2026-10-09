@@ -1,0 +1,124 @@
+name: Publicar versión
+
+# Al subir una etiqueta v1.2.3 se arman las descargas y se publica la versión:
+#   mufa-windows.zip (mufa.exe), mufa-macos.zip, mufa-servidor.zip (Docker)
+#   y la imagen ghcr.io/<propietario>/mufa:<versión>, con sus SHA-256.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+      - run: npm ci --no-fund && npm run build
+        working-directory: web
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: web
+          path: src/mufa/web
+
+  escritorio:
+    needs: web
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            nombre: windows
+          - os: macos-latest
+            nombre: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: web
+          path: src/mufa/web
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - run: uv sync --all-groups
+      - run: uv run pyinstaller empaquetado/mufa.spec --noconfirm --distpath dist --workpath build
+      - name: Probar que la app arranca (sin ventana)
+        shell: bash
+        env:
+          MUFA_DIR_DATOS: ${{ runner.temp }}/mufa-prueba
+          MUFA_SIN_VENTANA: "1"
+        run: |
+          ./dist/${{ matrix.nombre == 'windows' && 'mufa.exe' || 'mufa.app/Contents/MacOS/mufa' }} &
+          for intento in $(seq 1 60); do
+            curl -fs http://127.0.0.1:8080/api/v1/salud && exit 0
+            sleep 2
+          done
+          exit 1
+      - name: Empaquetar
+        shell: bash
+        run: |
+          mkdir paquete
+          if [ "${{ matrix.nombre }}" = windows ]; then
+            cp dist/mufa.exe empaquetado/LEEME-windows.txt paquete/
+            cd paquete && 7z a ../mufa-windows.zip . > /dev/null
+          else
+            # ditto conserva los permisos y la estructura de la .app.
+            cp -R dist/mufa.app empaquetado/LEEME-macos.txt paquete/
+            ditto -c -k paquete mufa-macos.zip
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mufa-${{ matrix.nombre }}
+          path: mufa-${{ matrix.nombre }}.zip
+
+  servidor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Imagen Docker
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          imagen="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/mufa"
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -t "$imagen:$version" -t "$imagen:latest" .
+          docker push "$imagen:$version"
+          docker push "$imagen:latest"
+          echo "IMAGEN=$imagen:$version" >> "$GITHUB_ENV"
+      - name: Paquete de servidor
+        run: |
+          mkdir mufa-servidor
+          cp empaquetado/servidor/* empaquetado/servidor/.env.ejemplo Caddyfile mufa-servidor/
+          sed -i "s|ghcr.io/PROPIETARIO/mufa:VERSION|$IMAGEN|" mufa-servidor/docker-compose.yml
+          sed -i "s|PROPIETARIO/mufa|${GITHUB_REPOSITORY}|" mufa-servidor/LEEME.txt
+          chmod +x mufa-servidor/instalar.sh
+          zip -qr mufa-servidor.zip mufa-servidor
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mufa-servidor
+          path: mufa-servidor.zip
+
+  publicar:
+    needs: [escritorio, servidor]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: descargas
+          merge-multiple: true
+      - name: Crear la versión en GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd descargas
+          sha256sum *.zip > SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" *.zip SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --title "mufa $GITHUB_REF_NAME" --generate-notes

@@ -1,0 +1,16 @@
+mufa para Windows
+=================
+
+1. Haz doble clic en mufa.exe. Se abre la app.
+2. La primera vez, crea tu cuenta de administrador.
+3. Para cerrarla, cierra la ventana.
+
+Windows puede avisar "Windows protegió su PC" porque la app todavía no
+está firmada: elige "Más información" y "Ejecutar de todas formas".
+
+Necesita Windows 10 u 11 con Microsoft Edge WebView2 (ya viene en Windows 11
+y en Windows 10 actualizado).
+
+Tus datos quedan en la carpeta .mufa de tu usuario (C:\Users\<tú>\.mufa).
+mufa solo escucha en esta computadora: nadie más de la red puede entrar.
+Para que entre tu equipo de trabajo, instálalo en un servidor (mufa-servidor.zip).

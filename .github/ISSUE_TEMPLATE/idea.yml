@@ -1,0 +1,15 @@
+name: Idea o mejora
+description: Algo que te gustaría que mufa hiciera.
+labels: ["idea"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: ¿Qué problema te resolvería?
+      description: Cuéntanos tu caso. Es más útil que la solución que imaginas.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: ¿Cómo te lo imaginas?

@@ -1,0 +1,25 @@
+Building configuration...
+
+Current configuration : 2114 bytes
+!
+! Last configuration change at 10:20:31 UTC Mon Oct 5 2026 by admin
+!
+version 17.9
+hostname R-SUCURSAL-2
+!
+ip dns server
+ip http server
+ip http secure-server
+!
+snmp-server community public RO
+snmp-server community Xk29-monitoreo RO 10
+!
+line con 0
+ logging synchronous
+line vty 0 4
+ transport input telnet ssh
+line vty 5 15
+ access-class GESTION in
+ transport input ssh
+!
+end

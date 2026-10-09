@@ -1,0 +1,34 @@
+name: Algo no funciona
+description: Un error o algo que no se comporta como esperabas.
+labels: ["problema"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por avisar. **No pegues contraseñas, IPs públicas ni configuraciones completas.**
+        Si es una vulnerabilidad de seguridad, no la reportes acá: sigue SECURITY.md.
+  - type: dropdown
+    id: donde
+    attributes:
+      label: ¿Dónde usas mufa?
+      options: [Windows, macOS, Servidor con Docker, Desde el código]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión
+      description: Está en Ajustes, o en el nombre de la descarga.
+      placeholder: v0.1.0
+  - type: input
+    id: equipo
+    attributes:
+      label: Marca y modelo del equipo (si aplica)
+      placeholder: MikroTik CCR2004, RouterOS 7.16
+  - type: textarea
+    id: que_paso
+    attributes:
+      label: Qué pasó
+      description: Qué hiciste, qué esperabas y qué viste. Una captura ayuda mucho.
+    validations:
+      required: true

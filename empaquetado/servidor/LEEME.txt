@@ -1,0 +1,19 @@
+mufa — instalación en un servidor
+=================================
+
+Requisitos: un servidor Linux con Docker (2 GB de RAM alcanzan para cientos
+de equipos). Los datos quedan en ese servidor: nada sale de tu red.
+
+  1. sh instalar.sh
+  2. Abre https://<tu-servidor>/ y crea el administrador con el token que
+     muestra el instalador (también: docker compose logs mufa).
+
+Para usar tu dominio con un certificado válido, edita MUFA_DOMINIO en .env
+(el dominio tiene que apuntar a este servidor y los puertos 80 y 443 estar
+abiertos) y ejecuta: docker compose up -d
+
+Actualizar a una versión nueva: cambia la versión en MUFA_IMAGEN (o en
+docker-compose.yml) y ejecuta: docker compose pull && docker compose up -d
+Las migraciones de la base se aplican solas.
+
+Documentación: https://github.com/DecoTaco22/mufa

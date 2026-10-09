@@ -1,0 +1,47 @@
+# Instalación de mufa con HTTPS:
+#
+#   docker compose up -d
+#   docker compose logs mufa      # el token para crear el administrador
+#
+# y abrir https://<servidor>/ en el navegador. (También se puede crear desde
+# la terminal: docker compose exec mufa mufa crear-admin --usuario admin ...)
+#
+# Con MUFA_DOMINIO=mufa.tuempresa.com (en un archivo .env) Caddy pide un
+# certificado de Let's Encrypt; sin dominio usa uno propio para localhost
+# o la IP del servidor.
+
+services:
+  mufa:
+    build: .
+    image: mufa:local
+    restart: unless-stopped
+    volumes:
+      - mufa-datos:/datos
+    environment:
+      MUFA_SONDEO_MINUTOS: ${MUFA_SONDEO_MINUTOS:-5}
+      MUFA_RESPALDO_HORAS: ${MUFA_RESPALDO_HORAS:-24}
+      # Zona horaria: el respaldo diario corre a la hora elegida en esta zona.
+      TZ: ${TZ:-UTC}
+      # Solo se le habla con el nombre que sirve Caddy (contra el DNS rebinding).
+      MUFA_HOSTS_PERMITIDOS: ${MUFA_DOMINIO:-localhost},127.0.0.1,localhost
+    # Sin "ports": a la API solo se llega a través de Caddy, con HTTPS.
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - mufa
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      MUFA_DOMINIO: ${MUFA_DOMINIO:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-datos:/data
+      - caddy-config:/config
+
+volumes:
+  mufa-datos:
+  caddy-datos:
+  caddy-config:

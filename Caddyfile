@@ -1,0 +1,10 @@
+# HTTPS automático delante de mufa. Con un dominio público, Caddy obtiene
+# y renueva el certificado solo; con localhost o una IP usa su propia CA.
+{$MUFA_DOMINIO} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy mufa:8080
+}

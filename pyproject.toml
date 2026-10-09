@@ -1,0 +1,71 @@
+[project]
+name = "mufa"
+version = "0.1.0"
+description = "Herramientas de diagnóstico de solo lectura para operadores de internet pequeños."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "AGPL-3.0-only" }
+dependencies = [
+    "typer>=0.12",
+    "paramiko>=3.4,<5",
+    "rich>=13.7",
+    "pydantic[email]>=2.6",
+    "jinja2>=3.1",
+    "fastapi>=0.142.2",
+    "uvicorn[standard]>=0.54.0",
+    "sqlalchemy>=2.0",
+    "alembic>=1.20.0",
+    "argon2-cffi>=25.1.0",
+    "cryptography>=50.0.1",
+    "python-multipart>=0.0.32",
+    "pyotp>=2.10.0",
+    "pysnmp>=7.1.30",
+    "httpx>=0.28.1",
+    "pyserial>=3.5",
+]
+
+[project.scripts]
+mufa = "mufa.cli:main"
+mufa-gui = "mufa.gui:main"
+mufa-escritorio = "mufa.escritorio:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mufa"]
+# La app web compilada no se versiona (.gitignore) pero va dentro del paquete.
+artifacts = ["src/mufa/web"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pre-commit>=3.7",
+    "types-paramiko>=3.4",
+    "pyinstaller>=6.10",
+    "httpx>=0.28.1",
+    "pillow>=11",
+    "pyftpdlib>=2.2.0",
+]
+escritorio = [
+    "pywebview>=6.2.1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+# pysnmp y pyserial no publican tipos: lo que devuelven se trata como Any.
+[[tool.mypy.overrides]]
+module = ["pysnmp.*", "serial", "serial.*"]
+ignore_missing_imports = true
