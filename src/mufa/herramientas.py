@@ -26,7 +26,7 @@ _NOMBRE_DE_HOST = re.compile(
 # Varias herramientas a la vez pueden saturar el servidor: se limita.
 _EN_CURSO = threading.BoundedSemaphore(4)
 # En Windows, sin esto cada ping abre una ventana de consola encima de la app.
-SIN_VENTANA = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+SIN_VENTANA: int = getattr(subprocess, "CREATE_NO_WINDOW", 0)  # solo existe en Windows
 # ping y tracert de Windows escriben en la página de códigos de la consola (OEM).
 CODIFICACION = "oem" if sys.platform == "win32" else "utf-8"
 # Un ping continuo no puede quedar corriendo para siempre si se olvida abierto.
