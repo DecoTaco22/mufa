@@ -1,15 +1,26 @@
 # Avisa (con un PR) cuando una dependencia tiene una versión nueva o una falla de seguridad.
+# Las versiones mayores rompen cosas: se actualizan a mano y con pruebas.
+# paramiko 5 quita SHA-1 y ssh-rsa, que piden muchos equipos viejos (ver docs/SEGURIDAD.md).
 version: 2
 updates:
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /web
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
