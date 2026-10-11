@@ -96,7 +96,7 @@ export function Ipam() {
     <>
       <Encabezado
         titulo="IPAM"
-        subtitulo={datos?.length ? `${datos.length} prefijos · ${enUso.toLocaleString("es")} IPs en uso · ${(utilizables - enUso).toLocaleString("es")} libres` : "Prefijos y direcciones documentados"}
+        subtitulo={datos?.length ? `${datos.length} ${datos.length === 1 ? "prefijo" : "prefijos"} · ${enUso.toLocaleString("es")} ${enUso === 1 ? "IP" : "IPs"} en uso · ${(utilizables - enUso).toLocaleString("es")} libres` : "Prefijos y direcciones documentados"}
         acciones={
           gestor && (
             <>
@@ -150,7 +150,7 @@ export function Ipam() {
                   <span className={`grupo-porcentaje ${g.porcentaje >= 85 ? "lleno" : g.porcentaje >= 70 ? "alto" : ""}`}>{g.porcentaje}%</span>
                 </span>
                 <span className="grupo-barra"><i style={{ width: `${Math.min(100, g.porcentaje)}%` }} /></span>
-                <span className="grupo-detalle">{g.redes.length} {g.redes.length === 1 ? "red" : "redes"} · {g.asignadas.toLocaleString("es")} IPs en uso</span>
+                <span className="grupo-detalle">{g.redes.length} {g.redes.length === 1 ? "red" : "redes"} · {g.asignadas.toLocaleString("es")} {g.asignadas === 1 ? "IP" : "IPs"} en uso</span>
               </button>
             ))}
           </aside>
@@ -162,7 +162,7 @@ export function Ipam() {
                   <h2>{grupoActual.nombre}</h2>
                 </div>
                 <div className="cifras-ipam">
-                  <div><strong>{grupoActual.redes.length}</strong><span>redes</span></div>
+                  <div><strong>{grupoActual.redes.length}</strong><span>{grupoActual.redes.length === 1 ? "red" : "redes"}</span></div>
                   <div className="uso"><strong>{grupoActual.asignadas.toLocaleString("es")}</strong><span>en uso</span></div>
                   <div className="libre"><strong>{(grupoActual.utilizables - grupoActual.asignadas).toLocaleString("es")}</strong><span>libres</span></div>
                 </div>

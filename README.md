@@ -11,6 +11,16 @@ solución lista para copiar y por qué importa.
 > Estado: en desarrollo (0.x). Este repositorio es la **edición gratuita**:
 > completa para redes chicas, hasta 10 equipos.
 
+<p align="center">
+  <a href="https://github.com/DecoTaco22/mufa/releases/latest"><b>Descargar para Windows, Mac o servidor</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://mufa.pages.dev">Sitio web</a>
+  &nbsp;·&nbsp;
+  <a href="docs/SEGURIDAD.md">Seguridad</a>
+</p>
+
+![El panel de mufa: equipos en línea, puntaje de seguridad, respaldos al día y los hallazgos que requieren atención](docs/capturas/panel.png)
+
 ## Qué hace
 
 **Monitoreo**
@@ -31,6 +41,19 @@ solución lista para copiar y por qué importa.
 - Copia automática de los respaldos a tu propio servidor por SFTP, FTPS o FTP,
   en una carpeta por equipo o por día.
 
+<table>
+  <tr>
+    <td width="50%"><img src="docs/capturas/diferencias.png" alt="Qué cambió en la configuración de un router, línea por línea"></td>
+    <td width="50%"><img src="docs/capturas/respaldos.png" alt="Sección Respaldos: horario diario, copia a un servidor SFTP y estado de cada equipo"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Qué cambió en la configuración, línea por línea</sub></td>
+    <td align="center"><sub>Respaldo diario y copia a tu servidor</sub></td>
+  </tr>
+</table>
+
+![Un hallazgo de la auditoría: resolutor DNS abierto, con la evidencia y el comando para corregirlo](docs/capturas/hallazgos.png)
+
 **Documentación de la red**
 - **IPAM:** redes agrupadas por equipo con su porcentaje de uso, mapa de IPs
   libres y en uso, buscador, siguiente IP libre e importación directa desde
@@ -38,6 +61,8 @@ solución lista para copiar y por qué importa.
 - **VLANs** por dominio de capa 2, sin números repetidos, con el equipo y la
   interfaz donde está cada una.
 - **Fibra óptica:** presupuesto óptico, dispersión, PON y potencia de SFP.
+
+![IPAM agrupado por equipo, con el porcentaje de uso de cada uno y sus redes](docs/capturas/ipam.png)
 
 **Herramientas**
 - **Terminal** SSH, Telnet y puerto serie dentro de la app, con pestañas y
@@ -50,6 +75,8 @@ solución lista para copiar y por qué importa.
 **Equipo**
 - Usuarios con seis roles, verificación en dos pasos y registro de todo lo
   que pasa.
+
+![Qué puede hacer cada rol, de Lectura a Admin, y dónde es obligatoria la verificación en dos pasos](docs/capturas/roles.png)
 - Tema oscuro, claro o automático; funciona también en el celular.
 
 **Marcas:** cualquiera con SNMP para monitoreo. Respaldos por SSH: MikroTik,

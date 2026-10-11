@@ -258,8 +258,8 @@ def test_encendido_pero_sin_snmp(cliente: TestClient, admin: dict[str, str]) -> 
 
 
 def test_explicar_errores_snmp() -> None:
-    cred = snmp.CredencialesSNMP(version="3", usuario="Cabelnet")
+    cred = snmp.CredencialesSNMP(version="3", usuario="monitoreo")
     timeout = snmp.explicar("No SNMP response received before timeout", "127.0.0.1", cred)
     assert "127.0.0.1" in timeout and "Addresses" in timeout
-    assert "Cabelnet" in snmp.explicar("Unknown USM user", "127.0.0.1", cred)
+    assert "monitoreo" in snmp.explicar("Unknown USM user", "127.0.0.1", cred)
     assert "autenticación" in snmp.explicar("Wrong SNMP PDU digest", "127.0.0.1", cred)

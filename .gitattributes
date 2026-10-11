@@ -1,0 +1,5 @@
+# Saltos de línea de Linux en el repositorio, sin importar el sistema de quien sube cambios.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.icns binary

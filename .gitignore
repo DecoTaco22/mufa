@@ -23,4 +23,7 @@ src/mufa/web/
 web/node_modules/
 
 
+
+# Caché local de wrangler (Cloudflare): tiene datos de la cuenta
+.wrangler/
 *.tsbuildinfo

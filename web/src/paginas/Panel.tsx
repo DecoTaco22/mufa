@@ -69,7 +69,7 @@ export function Panel() {
                 {datos.respaldos_al_dia}
                 <small> / {datos.respaldables}</small>
               </div>
-              <div className="nota">Se respalda una vez al día</div>
+              <div className="nota"><Link to="/respaldos">Todos los días, a la hora que elijas</Link></div>
             </div>
           </Tarjeta>
           <Tarjeta>

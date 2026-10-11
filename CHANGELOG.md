@@ -1,5 +1,10 @@
 # Cambios
 
+## v0.1.1
+
+- README con capturas de la app.
+- Textos: «1 IP» y «1 red» en singular; el panel enlaza al horario de respaldos.
+
 ## v0.1.0 — primera versión pública
 
 Edición gratuita para redes de hasta 10 equipos.
