@@ -90,6 +90,7 @@ jobs:
           MSIX_NOMBRE: ${{ vars.MSIX_NOMBRE }}
           MSIX_EDITOR: ${{ vars.MSIX_EDITOR }}
           MSIX_EDITOR_VISIBLE: ${{ vars.MSIX_EDITOR_VISIBLE }}
+          MSIX_NOMBRE_VISIBLE: ${{ vars.MSIX_NOMBRE_VISIBLE }}
         run: |
           uv run --no-project --with pillow python empaquetado/windows/msix.py $env:VERSION
           if ($LASTEXITCODE -ne 0) { exit 1 }

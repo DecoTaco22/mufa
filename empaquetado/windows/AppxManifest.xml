@@ -8,7 +8,7 @@
   IgnorableNamespaces="uap rescap">
   <Identity Name="{NOMBRE}" Publisher="{EDITOR}" Version="{VERSION}" ProcessorArchitecture="x64" />
   <Properties>
-    <DisplayName>mufa</DisplayName>
+    <DisplayName>{NOMBRE_VISIBLE}</DisplayName>
     <PublisherDisplayName>{EDITOR_VISIBLE}</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <Description>Monitoreo, auditoría, respaldos, IPAM y terminal para redes de ISPs, telcos y data centers.</Description>
@@ -22,7 +22,7 @@
   <Applications>
     <Application Id="mufa" Executable="mufa\mufa.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="mufa"
+        DisplayName="{NOMBRE_VISIBLE}"
         Description="Monitoreo, auditoría y respaldos de tu red"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"

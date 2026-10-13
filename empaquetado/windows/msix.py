@@ -5,7 +5,8 @@
 
 Usa la app ya compilada (dist/mufa). La identidad del paquete sale de
 Partner Center (Producto > Identidad del producto) y llega por variables de
-entorno: MSIX_NOMBRE, MSIX_EDITOR (CN=...) y MSIX_EDITOR_VISIBLE. Sin ellas
+entorno: MSIX_NOMBRE, MSIX_EDITOR (CN=...), MSIX_EDITOR_VISIBLE y
+MSIX_NOMBRE_VISIBLE (el nombre reservado). Sin ellas
 arma un paquete de prueba que sirve para comprobar que se puede empaquetar.
 """
 
@@ -61,6 +62,8 @@ def main() -> None:
         "{NOMBRE}": os.environ.get("MSIX_NOMBRE") or "mufa.prueba",
         "{EDITOR}": os.environ.get("MSIX_EDITOR") or "CN=mufa-prueba",
         "{EDITOR_VISIBLE}": os.environ.get("MSIX_EDITOR_VISIBLE") or "mufa",
+        # Tiene que ser igual al nombre reservado en Partner Center.
+        "{NOMBRE_VISIBLE}": os.environ.get("MSIX_NOMBRE_VISIBLE") or "mufa",
         "{VERSION}": version_msix,
     }
     for marca, valor in valores.items():
