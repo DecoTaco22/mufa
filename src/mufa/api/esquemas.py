@@ -120,6 +120,18 @@ def _validar_ip(valor: str) -> str:
 
 class EstadoInicial(BaseModel):
     necesita_admin: bool
+    # La app de escritorio (SQLite) puede traer los datos de otra computadora.
+    puede_importar: bool = False
+
+
+class ExportarDatos(BaseModel):
+    password: str = Field(max_length=256)
+    frase: str = Field(min_length=12, max_length=256)
+
+
+class ArchivoExportado(BaseModel):
+    nombre: str
+    contenido: str
 
 
 class PrimerAdmin(BaseModel):

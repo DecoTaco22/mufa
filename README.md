@@ -89,7 +89,8 @@ Desde [Releases](https://github.com/DecoTaco22/mufa/releases/latest):
 
 | Descarga | Para qué | Cómo se usa |
 |---|---|---|
-| `mufa-windows.zip` | Probarlo en tu PC (Windows 10 u 11) | Aplicación con ventana propia |
+| `mufa-instalador-windows.exe` | Usarlo en tu PC (Windows 10 u 11) | Se instala como cualquier programa: menú Inicio y desinstalador |
+| `mufa-windows.zip` | Lo mismo, sin instalar (portátil) | Se descomprime y se abre `mufa.exe` |
 | `mufa-macos.zip` | Probarlo en tu Mac (Apple Silicon, macOS 12 o posterior) | Aplicación con ventana propia |
 | `mufa-servidor.zip` | Usarlo con todo tu equipo | Servidor Linux con Docker; se entra **desde el navegador** con HTTPS |
 
@@ -98,9 +99,13 @@ descarga.
 
 ### En tu computadora (Windows o Mac)
 
-1. Descomprime y abre `mufa.exe` (Windows) o arrastra `mufa.app` a
-   Aplicaciones (Mac).
-2. La primera vez crea tu cuenta de administrador.
+1. Abre `mufa-instalador-windows.exe` (pide permiso de administrador para
+   instalarse en Archivos de programa) o arrastra `mufa.app` a Aplicaciones
+   (Mac).
+2. La primera vez crea tu cuenta de administrador. Si ya usas mufa en otra
+   computadora, elige **Ya tengo cuenta** y abre el archivo que descargaste
+   allá en **Ajustes › Llevar a otra computadora**: entras con tu mismo
+   usuario, tus equipos y tus respaldos.
 
 Las apps todavía no están firmadas: Windows muestra "Windows protegió su PC"
 (elige **Más información › Ejecutar de todas formas**) y macOS la bloquea la

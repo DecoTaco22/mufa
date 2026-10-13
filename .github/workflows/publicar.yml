@@ -1,7 +1,8 @@
 name: Publicar versión
 
 # Al subir una etiqueta v1.2.3 se arman las descargas y se publica la versión:
-#   mufa-windows.zip (mufa.exe), mufa-macos.zip, mufa-servidor.zip (Docker)
+#   mufa-instalador-windows.exe, mufa-windows.zip (la misma app sin instalar),
+#   mufa-macos.zip, mufa-servidor.zip (Docker)
 #   y la imagen ghcr.io/<propietario>/mufa:<versión>, con sus SHA-256.
 on:
   push:
@@ -50,18 +51,30 @@ jobs:
           MUFA_DIR_DATOS: ${{ runner.temp }}/mufa-prueba
           MUFA_SIN_VENTANA: "1"
         run: |
-          ./dist/${{ matrix.nombre == 'windows' && 'mufa.exe' || 'mufa.app/Contents/MacOS/mufa' }} &
+          ./dist/${{ matrix.nombre == 'windows' && 'mufa/mufa.exe' || 'mufa.app/Contents/MacOS/mufa' }} &
           for intento in $(seq 1 60); do
             curl -fs http://127.0.0.1:8080/api/v1/salud && exit 0
             sleep 2
           done
           exit 1
+      - name: Instalador de Windows
+        if: matrix.nombre == 'windows'
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+          & $iscc /Q "/DVersion=$($env:GITHUB_REF_NAME.TrimStart('v'))" empaquetado\windows\mufa.iss
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Move-Item dist\mufa-instalador-windows.exe .
       - name: Empaquetar
         shell: bash
         run: |
           mkdir paquete
           if [ "${{ matrix.nombre }}" = windows ]; then
-            cp dist/mufa.exe empaquetado/LEEME-windows.txt paquete/
+            cp -R dist/mufa empaquetado/LEEME-windows.txt paquete/
             cd paquete && 7z a ../mufa-windows.zip . > /dev/null
           else
             # ditto conserva los permisos y la estructura de la .app.
@@ -71,7 +84,10 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: mufa-${{ matrix.nombre }}
-          path: mufa-${{ matrix.nombre }}.zip
+          path: |
+            mufa-${{ matrix.nombre }}.zip
+            mufa-instalador-windows.exe
+          if-no-files-found: error
 
   servidor:
     runs-on: ubuntu-latest
@@ -119,6 +135,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd descargas
-          sha256sum *.zip > SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" *.zip SHA256SUMS.txt \
+          sha256sum *.exe *.zip > SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" *.exe *.zip SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --title "mufa $GITHUB_REF_NAME" --generate-notes

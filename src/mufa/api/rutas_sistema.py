@@ -2,22 +2,25 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy import func, select
 
-from mufa import __version__, auth, licencia, marcas, primera_vez
+from mufa import __version__, auth, licencia, marcas, primera_vez, traslado
 from mufa.api.deps import DB, Estado, requiere
 from mufa.api.esquemas import (
+    ArchivoExportado,
     EstadoInicial,
     EventoSalida,
+    ExportarDatos,
     LicenciaInstalar,
     LicenciaSalida,
     MarcaSalida,
     PrimerAdmin,
 )
-from mufa.db import Equipo, Evento, Usuario
+from mufa.db import Equipo, Evento, Usuario, ahora
 from mufa.permisos import Permiso, Rol
 from mufa.servicios import registrar
 
@@ -27,6 +30,9 @@ Lector = Annotated[Usuario, Depends(requiere(Permiso.VER))]
 Admin = Annotated[Usuario, Depends(requiere(Permiso.ADMINISTRAR_USUARIOS))]
 Revisor = Annotated[Usuario, Depends(requiere(Permiso.VER_REGISTRO))]
 
+# Un archivo de traslado con meses de tráfico de cientos de interfaces no llega a esto.
+TAMANO_MAXIMO_TRASLADO = 512 * 1024 * 1024
+
 
 @router.get("/salud")
 def salud() -> dict[str, str]:
@@ -34,9 +40,13 @@ def salud() -> dict[str, str]:
 
 
 @router.get("/sistema/inicial")
-def estado_inicial(db: DB) -> EstadoInicial:
+def estado_inicial(db: DB, estado: Estado) -> EstadoInicial:
     """Público: la app web lo usa para mostrar el asistente de primera vez."""
-    return EstadoInicial(necesita_admin=not primera_vez.hay_usuarios(db))
+    motor = estado.sesiones.kw["bind"]
+    return EstadoInicial(
+        necesita_admin=not primera_vez.hay_usuarios(db),
+        puede_importar=traslado.ruta_sqlite(motor) is not None,
+    )
 
 
 @router.post("/sistema/inicial", status_code=status.HTTP_201_CREATED)
@@ -45,16 +55,7 @@ def crear_primer_admin(
 ) -> dict[str, str]:
     if primera_vez.hay_usuarios(db):
         raise HTTPException(status.HTTP_409_CONFLICT, "mufa ya tiene administrador")
-    clave = f"inicial:{request.client.host if request.client else ''}"
-    if estado.limitador.bloqueado(clave):
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "demasiados intentos")
-    if not primera_vez.token_valido(estado.token_inicial, entrada.token):
-        estado.limitador.registrar_fallo(clave)
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN,
-            "el token no es correcto: está en la consola del servidor o en "
-            f"{primera_vez.NOMBRE_ARCHIVO}, en el directorio de datos",
-        )
+    _token_de_primera_vez(entrada.token, request, estado)
     try:
         hash_password = auth.hashear_password(entrada.password)
     except auth.PasswordDebil as error:
@@ -72,6 +73,85 @@ def crear_primer_admin(
     estado.token_inicial = None
     primera_vez.descartar(estado.ajustes.dir_datos)
     return {"usuario": admin.usuario}
+
+
+def _token_de_primera_vez(token: str, request: Request, estado: Estado) -> None:
+    clave = f"inicial:{request.client.host if request.client else ''}"
+    if estado.limitador.bloqueado(clave):
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "demasiados intentos")
+    if not primera_vez.token_valido(estado.token_inicial, token):
+        estado.limitador.registrar_fallo(clave)
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "el token no es correcto: está en la consola del servidor o en "
+            f"{primera_vez.NOMBRE_ARCHIVO}, en el directorio de datos",
+        )
+
+
+@router.post("/sistema/exportar")
+def exportar_datos(
+    entrada: ExportarDatos, admin: Admin, db: DB, estado: Estado
+) -> ArchivoExportado:
+    """Todos los datos en un archivo cifrado con la frase, para llevarlos a otra computadora."""
+    ruta = traslado.ruta_sqlite(estado.sesiones.kw["bind"])
+    if ruta is None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "con PostgreSQL se respalda la base de datos del servidor (pg_dump) y el archivo "
+            "secreto.key",
+        )
+    if not auth.verificar_password(admin.hash_password, entrada.password):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "la contraseña no es correcta")
+    try:
+        contenido = traslado.exportar(ruta, estado.ajustes.dir_datos, entrada.frase)
+    except traslado.ErrorDeTraslado as error:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from None
+    registrar(db, admin, "sistema.exportar_datos")
+    return ArchivoExportado(
+        nombre=f"mufa-{ahora():%Y-%m-%d}{traslado.EXTENSION}", contenido=contenido
+    )
+
+
+@router.post("/sistema/importar", status_code=status.HTTP_201_CREATED)
+async def importar_datos(
+    request: Request,
+    estado: Estado,
+    archivo: Annotated[UploadFile, File(description="Archivo .mufa de la otra computadora")],
+    frase: Annotated[str, Form(max_length=256)],
+    token: Annotated[str, Form(max_length=200)] = "",
+) -> dict[str, int]:
+    """En una instalación nueva (sin usuarios), trae los datos de otra computadora."""
+    with estado.sesiones() as db:
+        if primera_vez.hay_usuarios(db):
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "mufa ya tiene cuentas en esta computadora"
+            )
+    _token_de_primera_vez(token, request, estado)
+    contenido = await archivo.read(TAMANO_MAXIMO_TRASLADO + 1)
+    if len(contenido) > TAMANO_MAXIMO_TRASLADO:
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "el archivo es demasiado grande")
+    motor = estado.sesiones.kw["bind"]
+    try:
+        # scrypt y la copia de la base tardan: fuera del hilo del servidor.
+        clave = await asyncio.to_thread(
+            traslado.importar,
+            contenido.decode("ascii", errors="replace"),
+            frase,
+            motor,
+            estado.ajustes.dir_datos,
+        )
+    except traslado.ErrorDeTraslado as error:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from None
+    estado.cifrador.cambiar_clave(clave)
+    estado.token_inicial = None
+    primera_vez.descartar(estado.ajustes.dir_datos)
+    with estado.sesiones() as db:
+        usuarios = db.scalar(select(func.count()).select_from(Usuario)) or 0
+        registrar(
+            db, None, "sistema.importar_datos", archivo.filename or "", {"usuarios": usuarios}
+        )
+        db.commit()
+    return {"usuarios": usuarios}
 
 
 @router.get("/marcas")

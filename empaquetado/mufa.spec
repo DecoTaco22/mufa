@@ -1,7 +1,8 @@
-# Aplicación de escritorio de mufa (Windows: mufa.exe; macOS: mufa.app).
+# Aplicación de escritorio de mufa (Windows: carpeta mufa con mufa.exe; macOS: mufa.app).
 #   uv run pyinstaller empaquetado/mufa.spec --noconfirm
 # Antes hay que compilar la app web (cd web && npm run build): va dentro.
 # ruff: noqa
+import re
 import sys
 from pathlib import Path
 
@@ -51,14 +52,49 @@ if sys.platform == "darwin":
         info_plist={"NSHighResolutionCapable": True, "LSMinimumSystemVersion": "12.0"},
     )
 else:
-    # Windows: un solo .exe, sin ventana de consola.
+    # Windows: una carpeta (mufa.exe + _internal) que instala el instalador
+    # (empaquetado/windows/mufa.iss). Un .exe de un solo archivo se descomprime
+    # en una carpeta temporal cada vez que se abre: más lento, y los antivirus
+    # lo confunden con malware.
+    from PyInstaller.utils.win32.versioninfo import (
+        FixedFileInfo,
+        StringFileInfo,
+        StringStruct,
+        StringTable,
+        VarFileInfo,
+        VarStruct,
+        VSVersionInfo,
+    )
+
+    VERSION = re.search(r'__version__ = "([^"]+)"', (FUENTE / "__init__.py").read_text(encoding="utf-8")).group(1)
+    numeros = tuple(int(n) for n in re.findall(r"\d+", VERSION)[:3]) + (0,)
+    textos = {
+        "CompanyName": "mufa",
+        "FileDescription": "mufa",
+        "FileVersion": VERSION,
+        "InternalName": "mufa",
+        "LegalCopyright": "Copyright (C) 2026 los autores de mufa. GNU AGPL v3.",
+        "OriginalFilename": "mufa.exe",
+        "ProductName": "mufa",
+        "ProductVersion": VERSION,
+    }
+    version = VSVersionInfo(
+        ffi=FixedFileInfo(filevers=numeros, prodvers=numeros),
+        kids=[
+            # 0x0C0A: español; 1200: Unicode.
+            StringFileInfo([StringTable("0C0A04B0", [StringStruct(k, v) for k, v in textos.items()])]),
+            VarFileInfo([VarStruct("Translation", [0x0C0A, 1200])]),
+        ],
+    )
     exe = EXE(
         pyz,
         a.scripts,
-        a.binaries,
-        a.datas,
+        [],
+        exclude_binaries=True,
         name="mufa",
         console=False,
         icon=str(RAIZ / "empaquetado/mufa.ico"),
+        version=version,
         upx=False,
     )
+    coleccion = COLLECT(exe, a.binaries, a.datas, name="mufa", upx=False)

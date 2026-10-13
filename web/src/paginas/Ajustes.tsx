@@ -15,6 +15,7 @@ export function Ajustes() {
         <div className="crece pila" style={{ gap: 14 }}>
           <MiCuenta />
           {usuario?.totp_activo && <CodigosRecuperacion />}
+          {puede(usuario?.rol, "administrar_usuarios") && <LlevarAOtraComputadora />}
         </div>
         <div className="crece pila" style={{ gap: 14 }}>
           <LicenciaYPlan />
@@ -90,6 +91,43 @@ function CodigosRecuperacion() {
           </Formulario>
         </>
       )}
+    </Tarjeta>
+  );
+}
+
+function LlevarAOtraComputadora() {
+  const { datos } = useDatos<{ puede_importar: boolean }>("/sistema/inicial");
+  const [password, setPassword] = useState("");
+  const [frase, setFrase] = useState("");
+  const [repetida, setRepetida] = useState("");
+  const [listo, setListo] = useState<string | null>(null);
+  // Con PostgreSQL (servidor) se respalda la base del servidor: esto es para la app de escritorio.
+  if (!datos?.puede_importar) return null;
+  return (
+    <Tarjeta titulo="Llevar a otra computadora">
+      <p className="tenue" style={{ marginTop: 0 }}>
+        Descarga todos tus datos (cuentas, equipos, respaldos e IPAM) en un archivo cifrado. En la otra computadora, instala
+        mufa, elige <strong>Ya tengo cuenta</strong> y abre el archivo: entras con tu mismo usuario y contraseña.
+      </p>
+      {listo && <div className="aviso ok" style={{ marginBottom: 12 }}>Descargado: {listo}. Guarda la frase: sin ella el archivo no se puede abrir.</div>}
+      <Formulario
+        textoBoton="Descargar mis datos"
+        onEnviar={async () => {
+          if (frase !== repetida) throw new Error("Las frases no coinciden.");
+          const r = await api<{ nombre: string; contenido: string }>("/sistema/exportar", { metodo: "POST", cuerpo: { password, frase } });
+          descargar(r.nombre, r.contenido);
+          setListo(r.nombre);
+          setPassword("");
+          setFrase("");
+          setRepetida("");
+        }}
+      >
+        <Campo etiqueta="Tu contraseña"><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></Campo>
+        <Campo etiqueta="Frase para el archivo" ayuda="Mínimo 12 caracteres. El archivo lleva las claves de tus equipos: sin esta frase nadie puede abrirlo.">
+          <input type="password" minLength={12} value={frase} onChange={(e) => setFrase(e.target.value)} required autoComplete="new-password" />
+        </Campo>
+        <Campo etiqueta="Repite la frase"><input type="password" minLength={12} value={repetida} onChange={(e) => setRepetida(e.target.value)} required autoComplete="new-password" /></Campo>
+      </Formulario>
     </Tarjeta>
   );
 }

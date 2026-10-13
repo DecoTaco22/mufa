@@ -33,6 +33,10 @@ class Cifrador:
     def __init__(self, clave: bytes) -> None:
         self._fernet = Fernet(clave)
 
+    def cambiar_clave(self, clave: bytes) -> None:
+        """Al importar los datos de otra computadora: sus secretos van con su clave."""
+        self._fernet = Fernet(clave)
+
     def cifrar(self, texto: str) -> str:
         return self._fernet.encrypt(texto.encode("utf-8")).decode("ascii")
 

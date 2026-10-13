@@ -52,6 +52,15 @@ la licencia se verifica sin internet.
   cargadas.
 - El registro de eventos anota que la contraseña cambió, nunca cuál es.
 
+### Llevar los datos a otra computadora
+- El archivo `.mufa` lleva la base y la clave de cifrado, así que va
+  cifrado con una frase de al menos 12 caracteres (scrypt + Fernet). Sin la
+  frase no se puede leer nada, ni siquiera los nombres de los equipos.
+- Solo lo descarga un administrador, que tiene que volver a escribir su
+  contraseña. Queda en el registro de eventos.
+- Solo se abre en una instalación sin usuarios y con el token de primera
+  vez: nunca reemplaza datos que ya existen. Las sesiones abiertas no viajan.
+
 ### Conexión a los equipos
 - **Clave de host fija por equipo:** la primera conexión guarda la clave
   SSH del equipo y, si después cambia, mufa corta antes de mandar la

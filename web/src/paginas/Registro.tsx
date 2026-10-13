@@ -63,6 +63,8 @@ const ACCIONES: Record<string, [string, NombreIcono, Tono]> = {
   "vlan.importar": ["Importó VLANs de un equipo", "descarga", "ok"],
   "sitio.crear": ["Creó un sitio", "ubicacion", "ok"],
   "licencia.instalar": ["Instaló una licencia", "estrella", "ok"],
+  "sistema.exportar_datos": ["Descargó todos los datos para otra computadora", "llave", "atencion"],
+  "sistema.importar_datos": ["Trajo los datos de otra computadora", "llave", "ok"],
   "terminal.abrir": ["Abrió una terminal", "terminal", "neutro"],
   "terminal.cerrar": ["Cerró una terminal", "terminal", "neutro"],
   "terminal.fallo": ["No pudo abrir una terminal", "terminal", "atencion"],

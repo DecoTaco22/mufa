@@ -20,7 +20,10 @@ def _admin(token: str) -> dict[str, str]:
 
 
 def test_primer_admin_con_token(cliente: TestClient, ajustes: Ajustes) -> None:
-    assert cliente.get(f"{API}/sistema/inicial").json() == {"necesita_admin": True}
+    assert cliente.get(f"{API}/sistema/inicial").json() == {
+        "necesita_admin": True,
+        "puede_importar": True,
+    }
     archivo = primera_vez.archivo_token(ajustes.dir_datos)
     token = archivo.read_text(encoding="utf-8").strip()
     assert token == cliente.app.state.mufa.token_inicial  # type: ignore[attr-defined]
@@ -29,7 +32,10 @@ def test_primer_admin_con_token(cliente: TestClient, ajustes: Ajustes) -> None:
     creado = cliente.post(f"{API}/sistema/inicial", json=_admin(token))
     assert creado.status_code == 201, creado.text
     assert not archivo.exists()
-    assert cliente.get(f"{API}/sistema/inicial").json() == {"necesita_admin": False}
+    assert cliente.get(f"{API}/sistema/inicial").json() == {
+        "necesita_admin": False,
+        "puede_importar": True,
+    }
 
     # Ya hay administrador: el mismo token no sirve para crear otro.
     assert cliente.post(f"{API}/sistema/inicial", json=_admin(token)).status_code == 409

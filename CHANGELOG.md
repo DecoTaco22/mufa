@@ -1,5 +1,20 @@
 # Cambios
 
+## v0.1.2
+
+- Instalador para Windows (`mufa-instalador-windows.exe`): se instala en
+  Archivos de programa con permiso de administrador, con acceso en el menú
+  Inicio, ícono opcional en el escritorio y desinstalador en «Aplicaciones
+  instaladas». Al actualizar se instala encima, sin perder datos. Sigue la
+  versión portátil (`mufa-windows.zip`).
+- La app de Windows ya no es un solo `.exe` que se descomprime cada vez:
+  abre más rápido y los antivirus la confunden menos con malware. Lleva
+  nombre, versión y editor en sus propiedades.
+- **Llevar a otra computadora:** en Ajustes, el administrador descarga todos
+  los datos en un archivo cifrado con una frase. En la otra computadora,
+  la pantalla de bienvenida tiene **Ya tengo cuenta** para abrirlo y entrar
+  con el mismo usuario, en vez de crear una cuenta nueva.
+
 ## v0.1.1
 
 - README con capturas de la app.

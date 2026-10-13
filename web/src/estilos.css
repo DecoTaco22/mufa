@@ -426,6 +426,38 @@ tr.clic:hover td {
   padding: 5px 12px;
   font-size: 12px;
 }
+.pasos-traslado {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  color: var(--tx2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.elegir-archivo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+.elegir-archivo input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.elegir-archivo input:focus-visible + .boton {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+.elegir-archivo > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .boton-texto {
   font: inherit;
   background: none;

@@ -1,15 +1,20 @@
-mufa para Windows
-=================
+mufa para Windows, sin instalar
+===============================
 
-1. Haz doble clic en mufa.exe. Se abre la app.
-2. La primera vez, crea tu cuenta de administrador.
+Esta es la versión portátil: para instalar mufa como cualquier programa
+(menú Inicio, desinstalador), usa mufa-instalador-windows.exe.
+
+1. Descomprime esta carpeta donde quieras y abre mufa\mufa.exe.
+2. La primera vez, crea tu cuenta de administrador. Si ya usas mufa en otra
+   computadora, elige "Ya tengo cuenta" y abre el archivo que descargaste
+   allá en Ajustes > Llevar a otra computadora.
 3. Para cerrarla, cierra la ventana.
 
 Windows puede avisar "Windows protegió su PC" porque la app todavía no
 está firmada: elige "Más información" y "Ejecutar de todas formas".
 
-Necesita Windows 10 u 11 con Microsoft Edge WebView2 (ya viene en Windows 11
-y en Windows 10 actualizado).
+Necesita Windows 10 u 11 de 64 bits con Microsoft Edge WebView2 (ya viene
+en Windows 11 y en Windows 10 actualizado).
 
 Tus datos quedan en la carpeta .mufa de tu usuario (C:\Users\<tú>\.mufa).
 mufa solo escucha en esta computadora: nadie más de la red puede entrar.
