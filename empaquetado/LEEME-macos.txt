@@ -1,12 +1,39 @@
-mufa para macOS (Apple Silicon)
-===============================
+mufa para Mac
+=============
 
-1. Arrastra mufa.app a la carpeta Aplicaciones.
-2. La primera vez, macOS la bloquea porque todavía no está firmada:
-   clic derecho sobre mufa.app → Abrir → Abrir.
-   (Si no aparece la opción: Ajustes del Sistema → Privacidad y seguridad
-   → "Abrir igualmente".)
-3. La primera vez, crea tu cuenta de administrador.
+Necesita una Mac con chip Apple (M1 o posterior) y macOS 12 o más nuevo.
 
-Tus datos quedan en ~/.mufa. mufa solo escucha en esta computadora.
-Para que entre tu equipo de trabajo, instálalo en un servidor (mufa-servidor.zip).
+Instalar
+1. Arrastra mufa al ícono de Aplicaciones de esta ventana.
+2. Abre mufa desde Aplicaciones (o con Spotlight: Cmd + Espacio, "mufa").
+
+La primera vez macOS la bloquea
+mufa todavía no está firmada por Apple, así que la primera vez macOS dice
+que no puede comprobar si tiene software malicioso. Para abrirla:
+
+  macOS 15 (Sequoia) o más nuevo:
+    1. Intenta abrir mufa y cierra el aviso con "Listo".
+    2. Abre Ajustes del Sistema > Privacidad y seguridad.
+    3. Baja hasta "mufa fue bloqueada" y elige "Abrir igualmente".
+    4. Confirma con tu contraseña o Touch ID.
+
+  macOS 14 o anterior:
+    Clic derecho (o Control + clic) sobre mufa en Aplicaciones > Abrir > Abrir.
+
+Solo hace falta una vez: después se abre normal.
+
+Si macOS dice que "mufa está dañado", abre Terminal y ejecuta:
+    xattr -dr com.apple.quarantine /Applications/mufa.app
+y vuelve a abrirla.
+
+Empezar
+- Si es tu primera vez con mufa, crea tu cuenta de administrador.
+- Si ya usas mufa en otra computadora, elige "Ya tengo cuenta" y abre el
+  archivo que descargaste allá en Ajustes > Llevar a otra computadora.
+
+Tus datos quedan en ~/.mufa. mufa solo escucha en esta computadora: nadie
+más de la red puede entrar. Para que entre tu equipo de trabajo, instálalo
+en un servidor (mufa-servidor.zip).
+
+Desinstalar: arrastra mufa de Aplicaciones a la Papelera. Tus datos siguen en
+~/.mufa por si la vuelves a instalar.

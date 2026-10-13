@@ -1,19 +1,53 @@
-mufa — instalación en un servidor
-=================================
+mufa en un servidor
+===================
 
-Requisitos: un servidor Linux con Docker (2 GB de RAM alcanzan para cientos
-de equipos). Los datos quedan en ese servidor: nada sale de tu red.
+Para que todo tu equipo use mufa desde el navegador. Los datos quedan en tu
+servidor: nada sale de tu red.
 
-  1. sh instalar.sh
-  2. Abre https://<tu-servidor>/ y crea el administrador con el token que
-     muestra el instalador (también: docker compose logs mufa).
+Qué necesitas
+- Un servidor Linux de 64 bits (Intel o AMD) con 2 GB de RAM: alcanza para
+  cientos de equipos. Sirve una máquina virtual en Proxmox, VMware o un VPS.
+- Docker. Si no lo tiene:  curl -fsSL https://get.docker.com | sudo sh
+- Que tu equipo llegue al servidor por los puertos 80 y 443.
 
-Para usar tu dominio con un certificado válido, edita MUFA_DOMINIO en .env
-(el dominio tiene que apuntar a este servidor y los puertos 80 y 443 estar
-abiertos) y ejecuta: docker compose up -d
+Instalar (en el servidor)
+  curl -fsSLO https://github.com/PROPIETARIO/mufa/releases/latest/download/mufa-servidor.zip
+  unzip mufa-servidor.zip        (si falta unzip: sudo apt install unzip)
+  cd mufa-servidor
+  sudo sh instalar.sh
 
-Actualizar a una versión nueva: cambia la versión en MUFA_IMAGEN (o en
-docker-compose.yml) y ejecuta: docker compose pull && docker compose up -d
-Las migraciones de la base se aplican solas.
+El instalador pregunta con qué dirección van a entrar:
+- La IP del servidor (ej. 192.168.1.50): lo más simple, dentro de tu red.
+  El navegador avisa del certificado la primera vez: «Configuración
+  avanzada» > «Continuar».
+- O un dominio que apunte al servidor (ej. mufa.miisp.com): el certificado
+  sale solo y el navegador no avisa nada.
 
-Documentación: https://github.com/DecoTaco22/mufa
+Al terminar muestra la dirección y un token. Ábrela en el navegador, pon el
+token y crea la cuenta de administrador. Después, en Usuarios, crea las
+cuentas de tu equipo.
+
+¿Ya usabas mufa en tu computadora? En vez de crear la cuenta, elige «Ya
+tengo cuenta» y abre el archivo de Ajustes > Llevar a otra computadora:
+pasan tus equipos, respaldos y usuarios.
+
+Actualizar a una versión nueva
+  curl -fsSLO https://github.com/PROPIETARIO/mufa/releases/latest/download/mufa-servidor.zip
+  unzip -o mufa-servidor.zip
+  cd mufa-servidor && sudo sh instalar.sh
+Tu configuración (.env) y tus datos se conservan; la base se pone al día sola.
+
+Cambiar la dirección: sudo sh instalar.sh nueva-ip-o-dominio
+
+Útil
+  Ver qué pasa:      docker compose logs -f mufa
+  Detener:           docker compose down
+  Volver a arrancar: docker compose up -d
+  Respaldar todo:    los datos están en el volumen de Docker mufa-servidor_mufa-datos
+
+Ajustes (en .env, después: sudo sh instalar.sh)
+  TZ                   tu zona horaria, para la hora del respaldo diario
+  MUFA_SONDEO_MINUTOS  cada cuánto se consulta a los equipos por SNMP
+  MUFA_RESPALDO_HORAS  0 apaga los respaldos automáticos
+
+Ayuda y documentación: https://github.com/PROPIETARIO/mufa

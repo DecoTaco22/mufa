@@ -38,6 +38,8 @@ a = Analysis(
     excludes=["tkinter", "pytest"],
 )
 pyz = PYZ(a.pure)
+VERSION = re.search(r'__version__ = "([^"]+)"', (FUENTE / "__init__.py").read_text(encoding="utf-8")).group(1)
+COPYRIGHT = "Copyright (C) 2026 los autores de mufa. GNU AGPL v3."
 
 if sys.platform == "darwin":
     # macOS: una .app de verdad (carpeta), que se abre con doble clic.
@@ -49,7 +51,18 @@ if sys.platform == "darwin":
         bundle_identifier="app.mufa.escritorio",
         # PyInstaller convierte el PNG a .icns (con Pillow).
         icon=str(RAIZ / "empaquetado/mufa.png"),
-        info_plist={"NSHighResolutionCapable": True, "LSMinimumSystemVersion": "12.0"},
+        version=VERSION,
+        info_plist={
+            "CFBundleName": "mufa",
+            "CFBundleDisplayName": "mufa",
+            "CFBundleShortVersionString": VERSION,
+            "CFBundleVersion": VERSION,
+            "CFBundleDevelopmentRegion": "es",
+            "NSHumanReadableCopyright": COPYRIGHT,
+            "LSApplicationCategoryType": "public.app-category.utilities",
+            "NSHighResolutionCapable": True,
+            "LSMinimumSystemVersion": "12.0",
+        },
     )
 else:
     # Windows: una carpeta (mufa.exe + _internal) que instala el instalador
@@ -66,14 +79,13 @@ else:
         VSVersionInfo,
     )
 
-    VERSION = re.search(r'__version__ = "([^"]+)"', (FUENTE / "__init__.py").read_text(encoding="utf-8")).group(1)
     numeros = tuple(int(n) for n in re.findall(r"\d+", VERSION)[:3]) + (0,)
     textos = {
         "CompanyName": "mufa",
         "FileDescription": "mufa",
         "FileVersion": VERSION,
         "InternalName": "mufa",
-        "LegalCopyright": "Copyright (C) 2026 los autores de mufa. GNU AGPL v3.",
+        "LegalCopyright": COPYRIGHT,
         "OriginalFilename": "mufa.exe",
         "ProductName": "mufa",
         "ProductVersion": VERSION,

@@ -124,5 +124,7 @@ export function descargar(nombre: string, texto: string): void {
   enlace.href = URL.createObjectURL(new Blob([texto], { type: "text/plain;charset=utf-8" }));
   enlace.download = nombre;
   enlace.click();
-  URL.revokeObjectURL(enlace.href);
+  // En la app de Mac (WebKit) la descarga empieza después de elegir dónde guardarla:
+  // si se libera enseguida, el archivo ya no está.
+  setTimeout(() => URL.revokeObjectURL(enlace.href), 120_000);
 }

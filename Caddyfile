@@ -1,5 +1,11 @@
 # HTTPS automático delante de mufa. Con un dominio público, Caddy obtiene
 # y renueva el certificado solo; con localhost o una IP usa su propia CA.
+{
+	# Quien entra por la IP no manda el nombre del sitio (SNI): sin esto, Caddy
+	# buscaría el certificado de la IP interna del contenedor y no lo tendría.
+	default_sni {$MUFA_DOMINIO}
+}
+
 {$MUFA_DOMINIO} {
 	encode zstd gzip
 	header {

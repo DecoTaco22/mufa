@@ -1,9 +1,8 @@
 # mufa en un servidor, con HTTPS automático (Caddy).
 #
-#   1. Copia .env.ejemplo a .env y pon tu dominio (o déjalo en localhost).
-#   2. docker compose up -d
-#   3. docker compose logs mufa     -> muestra el token de primera vez
-#   4. Abre https://<tu-servidor>/ y crea el administrador con ese token.
+# Lo más fácil: sudo sh instalar.sh (pregunta la dirección, arranca y muestra
+# el token). A mano: copia .env.ejemplo a .env, pon la IP o el dominio en
+# MUFA_DOMINIO y ejecuta docker compose up -d.
 
 services:
   mufa:

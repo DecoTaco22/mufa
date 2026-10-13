@@ -2,11 +2,14 @@ name: Publicar versión
 
 # Al subir una etiqueta v1.2.3 se arman las descargas y se publica la versión:
 #   mufa-instalador-windows.exe, mufa-windows.zip (la misma app sin instalar),
-#   mufa-macos.zip, mufa-servidor.zip (Docker)
+#   mufa-macos.dmg, mufa-servidor.zip (Docker)
 #   y la imagen ghcr.io/<propietario>/mufa:<versión>, con sus SHA-256.
+# A mano (Actions > Publicar versión > Run workflow) arma las descargas de
+# escritorio para probarlas, sin publicar nada.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -42,6 +45,15 @@ jobs:
         with:
           name: web
           path: src/mufa/web
+      - name: Versión
+        shell: bash
+        run: |
+          version=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/mufa/__init__.py)
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "La etiqueta $GITHUB_REF_NAME no coincide con la versión $version" >&2
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - run: uv sync --all-groups
       - run: uv run pyinstaller empaquetado/mufa.spec --noconfirm --distpath dist --workpath build
@@ -66,7 +78,7 @@ jobs:
             choco install innosetup -y --no-progress
             if ($LASTEXITCODE -ne 0) { exit 1 }
           }
-          & $iscc /Q "/DVersion=$($env:GITHUB_REF_NAME.TrimStart('v'))" empaquetado\windows\mufa.iss
+          & $iscc /Q "/DVersion=$env:VERSION" empaquetado\windows\mufa.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Move-Item dist\mufa-instalador-windows.exe .
       - name: Empaquetar
@@ -77,19 +89,31 @@ jobs:
             cp -R dist/mufa empaquetado/LEEME-windows.txt paquete/
             cd paquete && 7z a ../mufa-windows.zip . > /dev/null
           else
-            # ditto conserva los permisos y la estructura de la .app.
-            cp -R dist/mufa.app empaquetado/LEEME-macos.txt paquete/
-            ditto -c -k paquete mufa-macos.zip
+            # Una firma rota es lo que hace que macOS diga "mufa está dañado".
+            codesign --verify --deep --strict dist/mufa.app
+            # Imagen de disco como cualquier app de Mac: mufa.app y un acceso a
+            # Aplicaciones para arrastrarla. ditto conserva la firma y los enlaces.
+            ditto dist/mufa.app paquete/mufa.app
+            ln -s /Applications paquete/Aplicaciones
+            cp empaquetado/LEEME-macos.txt paquete/LEEME.txt
+            hdiutil create -volname mufa -srcfolder paquete -fs HFS+ -format UDZO -ov mufa-macos.dmg
+            # La app dentro de la imagen sigue entera y firmada.
+            hdiutil attach -nobrowse -readonly -mountpoint /tmp/mufa-dmg mufa-macos.dmg
+            codesign --verify --deep --strict /tmp/mufa-dmg/mufa.app
+            test "$(defaults read /tmp/mufa-dmg/mufa.app/Contents/Info.plist CFBundleShortVersionString)" = "$VERSION"
+            hdiutil detach /tmp/mufa-dmg
           fi
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: mufa-${{ matrix.nombre }}
           path: |
-            mufa-${{ matrix.nombre }}.zip
+            mufa-windows.zip
             mufa-instalador-windows.exe
+            mufa-macos.dmg
           if-no-files-found: error
 
   servidor:
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -121,6 +145,7 @@ jobs:
           path: mufa-servidor.zip
 
   publicar:
+    if: github.ref_type == 'tag'
     needs: [escritorio, servidor]
     runs-on: ubuntu-latest
     permissions:
@@ -135,6 +160,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd descargas
-          sha256sum *.exe *.zip > SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" *.exe *.zip SHA256SUMS.txt \
+          sha256sum *.exe *.dmg *.zip > SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" *.exe *.dmg *.zip SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --title "mufa $GITHUB_REF_NAME" --generate-notes

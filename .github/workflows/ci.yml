@@ -87,3 +87,44 @@ jobs:
           ! grep -qi '^server:' cabeceras.txt
       - if: always()
         run: docker compose down -v
+
+  instalador-servidor:
+    # El paquete de servidor tal como lo usa un cliente: instalar.sh sin
+    # preguntas, entrando por la IP del servidor (el navegador no manda SNI)
+    # y creando el administrador con el token que muestra.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: docker build -t mufa:prueba .
+      - name: Armar el paquete como en una versión
+        run: |
+          mkdir mufa-servidor
+          cp empaquetado/servidor/* empaquetado/servidor/.env.ejemplo Caddyfile mufa-servidor/
+          sed -i "s|ghcr.io/PROPIETARIO/mufa:VERSION|mufa:prueba|" mufa-servidor/docker-compose.yml
+      - name: Instalar por la IP
+        run: |
+          ip=$(hostname -I | awk '{print $1}')
+          echo "IP=$ip" >> "$GITHUB_ENV"
+          sudo sh mufa-servidor/instalar.sh "$ip" < /dev/null | tee salida.txt
+          grep -q "Abre:   https://$ip/" salida.txt
+          sed -n 's/^ *Token:  *//p' salida.txt > token.txt
+          test -s token.txt
+      - name: Entrar por HTTPS con la IP, crear el admin con el token e iniciar sesión
+        run: |
+          curl -kfsS "https://$IP/api/v1/salud"
+          curl -kfsS "https://$IP/" | grep -q '<div id="raiz">'
+          curl -kfsS -X POST "https://$IP/api/v1/sistema/inicial" \
+            -H 'Content-Type: application/json' -H 'X-Mufa-Csrf: 1' \
+            -d "{\"token\":\"$(cat token.txt)\",\"usuario\":\"admin\",\"nombre\":\"CI\",\"password\":\"clave-de-prueba-del-ci\"}"
+          curl -kfsS -X POST "https://$IP/api/v1/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d '{"usuario":"admin","password":"clave-de-prueba-del-ci"}' | grep -q '"token"'
+      - name: Volver a ejecutarlo (como al actualizar) conserva la dirección y los datos
+        run: |
+          sudo sh mufa-servidor/instalar.sh < /dev/null | tee salida.txt
+          grep -q "Abre:   https://$IP/" salida.txt
+          grep -q "Entra con tu usuario de siempre" salida.txt
+      - if: failure()
+        run: cd mufa-servidor && sudo docker compose logs
+      - if: always()
+        run: cd mufa-servidor && sudo docker compose down -v

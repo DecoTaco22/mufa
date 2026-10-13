@@ -91,7 +91,7 @@ Desde [Releases](https://github.com/DecoTaco22/mufa/releases/latest):
 |---|---|---|
 | `mufa-instalador-windows.exe` | Usarlo en tu PC (Windows 10 u 11) | Se instala como cualquier programa: menú Inicio y desinstalador |
 | `mufa-windows.zip` | Lo mismo, sin instalar (portátil) | Se descomprime y se abre `mufa.exe` |
-| `mufa-macos.zip` | Probarlo en tu Mac (Apple Silicon, macOS 12 o posterior) | Aplicación con ventana propia |
+| `mufa-macos.dmg` | Usarlo en tu Mac (chip Apple M1 o posterior, macOS 12 o más nuevo) | Se arrastra a Aplicaciones, como cualquier app de Mac |
 | `mufa-servidor.zip` | Usarlo con todo tu equipo | Servidor Linux con Docker; se entra **desde el navegador** con HTTPS |
 
 Cada versión publica sus sumas SHA-256 (`SHA256SUMS.txt`) para verificar la
@@ -115,23 +115,28 @@ solo escucha en tu computadora: nadie más de la red puede entrar.
 
 ### En un servidor (para todo tu equipo, desde el navegador)
 
-Requisitos: Linux con Docker. Con 2 GB de RAM alcanza para cientos de equipos.
+Requisitos: Linux de 64 bits (Intel o AMD) con Docker y 2 GB de RAM, que
+alcanzan para cientos de equipos. Sirve una VM en Proxmox o VMware, o un VPS.
 
 ```bash
+curl -fsSLO https://github.com/DecoTaco22/mufa/releases/latest/download/mufa-servidor.zip
 unzip mufa-servidor.zip && cd mufa-servidor
-cp .env.ejemplo .env          # pon tu dominio en MUFA_DOMINIO (o déjalo en localhost)
-docker compose up -d
-docker compose logs mufa      # muestra el token de primera vez
+sudo sh instalar.sh
 ```
 
-Abre `https://<tu-servidor>/` y crea el administrador con ese token. Con un
-dominio público, Caddy obtiene y renueva solo el certificado de Let's
-Encrypt; sin dominio usa un certificado propio. A mufa solo se llega por
-HTTPS: el contenedor no publica puertos.
+El instalador revisa que Docker esté listo, pregunta con qué dirección van a
+entrar (la IP del servidor o un dominio), arranca mufa y muestra la dirección
+y el token para crear el administrador. Con un dominio público, Caddy obtiene
+y renueva solo el certificado de Let's Encrypt; con una IP usa un certificado
+propio (el navegador avisa la primera vez). A mufa solo se llega por HTTPS:
+el contenedor no publica puertos.
 
-Para actualizar: cambia la versión en `MUFA_IMAGEN` y ejecuta
-`docker compose pull && docker compose up -d`. Las migraciones de la base se
-aplican solas.
+Si ya usabas la app de escritorio, en la bienvenida elige **Ya tengo cuenta**
+y abre el archivo de **Ajustes › Llevar a otra computadora**.
+
+Para actualizar: descarga el `mufa-servidor.zip` nuevo, descomprímelo encima
+(`unzip -o`) y vuelve a ejecutar `sudo sh instalar.sh`. Tu `.env` y tus datos
+se conservan y la base se pone al día sola.
 
 ### Configuración del servidor
 

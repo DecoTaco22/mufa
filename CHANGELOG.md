@@ -1,5 +1,18 @@
 # Cambios
 
+## v0.1.3
+
+- **Mac:** se descarga como `mufa-macos.dmg`, la imagen de disco de
+  siempre: se arrastra mufa a Aplicaciones. La app muestra su versión, y
+  las instrucciones explican cómo abrirla la primera vez en macOS 15
+  (Sequoia) o más nuevo, donde ya no sirve el clic derecho › Abrir.
+- **Servidor:** `sudo sh instalar.sh` revisa Docker y los permisos, pregunta
+  con qué dirección van a entrar (la IP del servidor o un dominio), arranca
+  mufa y muestra la dirección y el token. Entrar por la IP del servidor ya
+  funciona (antes solo con un dominio o desde el mismo servidor). Para
+  actualizar se descomprime el paquete nuevo encima y se vuelve a ejecutar.
+- La descarga de «Llevar a otra computadora» funciona también en la app de Mac.
+
 ## v0.1.2
 
 - Instalador para Windows (`mufa-instalador-windows.exe`): se instala en
