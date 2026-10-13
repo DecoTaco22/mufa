@@ -81,6 +81,29 @@ jobs:
           & $iscc /Q "/DVersion=$env:VERSION" empaquetado\windows\mufa.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Move-Item dist\mufa-instalador-windows.exe .
+      - name: Paquete para la Microsoft Store
+        # La tienda lo firma. La identidad sale de Partner Center y se guarda en
+        # Settings > Secrets and variables > Actions > Variables del repositorio.
+        if: matrix.nombre == 'windows'
+        shell: pwsh
+        env:
+          MSIX_NOMBRE: ${{ vars.MSIX_NOMBRE }}
+          MSIX_EDITOR: ${{ vars.MSIX_EDITOR }}
+          MSIX_EDITOR_VISIBLE: ${{ vars.MSIX_EDITOR_VISIBLE }}
+        run: |
+          uv run --no-project --with pillow python empaquetado/windows/msix.py $env:VERSION
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\makeappx.exe" |
+            Sort-Object FullName | Select-Object -Last 1
+          & $makeappx.FullName pack /d build\msix /p mufa-tienda.msix /o
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: Guardar el paquete de la tienda (se sube a mano en Partner Center)
+        if: matrix.nombre == 'windows'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mufa-tienda
+          path: mufa-tienda.msix
+          if-no-files-found: error
       - name: Empaquetar
         shell: bash
         run: |
