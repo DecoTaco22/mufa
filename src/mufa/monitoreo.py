@@ -159,8 +159,8 @@ def uso_porcentual(
         return None
     segundos = (como_utc(momento) - como_utc(anterior.momento)).total_seconds()
     tasas = [
-        _tasa(anterior.octetos_entrada, actual.octetos_entrada, segundos),
-        _tasa(anterior.octetos_salida, actual.octetos_salida, segundos),
+        tasa_bps(anterior.octetos_entrada, actual.octetos_entrada, segundos),
+        tasa_bps(anterior.octetos_salida, actual.octetos_salida, segundos),
     ]
     validas = [t for t in tasas if t is not None]
     if not validas:
@@ -247,7 +247,7 @@ class TraficoInterfaz:
     bps_salida: float | None
 
 
-def _tasa(antes: int, despues: int, segundos: float) -> float | None:
+def tasa_bps(antes: int, despues: int, segundos: float) -> float | None:
     # Un contador que baja es un reinicio del equipo o un desborde: no hay tasa.
     if segundos <= 0 or despues < antes:
         return None
@@ -293,12 +293,12 @@ def trafico(db: Session, equipo_id: int) -> list[TraficoInterfaz]:
                 operativa=actual.operativa,
                 velocidad_mbps=actual.velocidad_mbps,
                 bps_entrada=(
-                    _tasa(anterior.octetos_entrada, actual.octetos_entrada, segundos)
+                    tasa_bps(anterior.octetos_entrada, actual.octetos_entrada, segundos)
                     if anterior
                     else None
                 ),
                 bps_salida=(
-                    _tasa(anterior.octetos_salida, actual.octetos_salida, segundos)
+                    tasa_bps(anterior.octetos_salida, actual.octetos_salida, segundos)
                     if anterior
                     else None
                 ),

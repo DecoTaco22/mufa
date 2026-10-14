@@ -196,6 +196,7 @@ def instalar_licencia(
     estado.archivo_licencia.parent.mkdir(parents=True, exist_ok=True)
     estado.archivo_licencia.write_text(entrada.licencia.strip(), encoding="utf-8")
     registrar(db, admin, "licencia.instalar", plan.cliente, {"plan": plan.nombre})
+    estado.pro.cargar(plan.llave_pro)
     return _licencia(db, estado)
 
 

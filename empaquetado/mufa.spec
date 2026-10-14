@@ -28,13 +28,19 @@ for carpeta in ("migraciones", "web", "templates"):
     for archivo in (FUENTE / carpeta).rglob("*"):
         if archivo.is_file() and "__pycache__" not in archivo.parts:
             datas.append((str(archivo), str(archivo.parent.relative_to(FUENTE.parent))))
+# Los módulos Pro van cifrados (mufa/modulos_pro.py): PyInstaller no puede leer
+# qué importan, así que lo que usan de la biblioteca estándar va a mano.
+PRO_CIFRADO = FUENTE / "pro" / "modulos.cifrado"
+if PRO_CIFRADO.exists():
+    datas.append((str(PRO_CIFRADO), "mufa/pro"))
+OCULTOS_PRO = ["statistics", "itertools", "math", "collections", "dataclasses", "decimal", "fractions"]
 
 a = Analysis(
     [str(RAIZ / "empaquetado/lanzador.py")],
     pathex=[str(RAIZ / "src")],
     datas=datas,
     binaries=binaries,
-    hiddenimports=ocultos + ["mufa.checks", "mufa.marcas", "email.mime.text"],
+    hiddenimports=ocultos + OCULTOS_PRO + ["mufa.checks", "mufa.marcas", "mufa.pro", "email.mime.text"],
     excludes=["tkinter", "pytest"],
 )
 pyz = PYZ(a.pure)

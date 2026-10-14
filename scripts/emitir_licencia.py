@@ -22,6 +22,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
 CLAVE_POR_DEFECTO = Path.home() / ".mufa-emisor" / "emisor_privada.pem"
+LLAVE_PRO_POR_DEFECTO = Path.home() / ".mufa-emisor" / "pro.key"
 
 
 def _b64(datos: bytes) -> str:
@@ -34,15 +35,21 @@ def emitir(
     plan: str,
     max_equipos: int | None,
     vence: date | None,
+    identificador: str | None = None,
+    llave_pro: str | None = None,
 ) -> str:
     contenido = {
-        "id": secrets.token_hex(8),
+        # El mismo id en cada mes de una suscripción: así la app encuentra la renovación.
+        "id": identificador or secrets.token_hex(8),
         "cliente": cliente,
         "plan": plan,
         "max_equipos": max_equipos,
         "emitida": datetime.now(UTC).date().isoformat(),
         "vence": vence.isoformat() if vence else None,
     }
+    if llave_pro:
+        # Abre los módulos Pro cifrados (mufa.modulos_pro).
+        contenido["pro"] = llave_pro
     datos = json.dumps(contenido, ensure_ascii=False, sort_keys=True).encode("utf-8")
     return f"{_b64(datos)}.{_b64(clave.sign(datos))}"
 
@@ -56,13 +63,19 @@ def main(argv: list[str]) -> int:
     )
     parser.add_argument("--vence", type=date.fromisoformat, default=None)
     parser.add_argument("--clave", type=Path, default=CLAVE_POR_DEFECTO)
+    parser.add_argument("--id", default=None, help="Para renovar: el id de la licencia anterior.")
+    parser.add_argument("--llave-pro", type=Path, default=LLAVE_PRO_POR_DEFECTO)
     args = parser.parse_args(argv)
 
     clave = load_pem_private_key(args.clave.read_bytes(), password=None)
     if not isinstance(clave, Ed25519PrivateKey):
         print("La clave del emisor no es Ed25519.", file=sys.stderr)
         return 1
-    print(emitir(clave, args.cliente, args.plan, args.max_equipos, args.vence))
+    if not args.llave_pro.exists():
+        print(f"Falta la llave de Pro ({args.llave_pro}).", file=sys.stderr)
+        return 1
+    llave_pro = args.llave_pro.read_text(encoding="ascii").strip()
+    print(emitir(clave, args.cliente, args.plan, args.max_equipos, args.vence, args.id, llave_pro))
     return 0
 
 

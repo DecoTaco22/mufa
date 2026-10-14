@@ -6,7 +6,7 @@ SQLite para desarrollo e instalaciones chicas; PostgreSQL en producción
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, ClassVar
 
 from sqlalchemy import (
@@ -196,6 +196,31 @@ class MuestraInterfaz(Base):
     velocidad_mbps: Mapped[int | None]
     octetos_entrada: Mapped[int] = mapped_column(BigInteger)
     octetos_salida: Mapped[int] = mapped_column(BigInteger)
+
+
+class TraficoDiario(Base):
+    """Resumen de un día de tráfico de una interfaz: el historial largo.
+
+    Las muestras de cada sondeo se borran a los pocos días; esto queda (un
+    año en Pro) y es lo que usa la predicción de capacidad. Tasas en bps.
+    """
+
+    __tablename__ = "trafico_diario"
+    __table_args__ = (UniqueConstraint("equipo_id", "if_index", "dia", name="uq_trafico_diario"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    equipo_id: Mapped[int] = mapped_column(ForeignKey("equipos.id", ondelete="CASCADE"))
+    if_index: Mapped[int]
+    dia: Mapped[date] = mapped_column(index=True)
+    nombre: Mapped[str] = mapped_column(String(255))
+    velocidad_mbps: Mapped[int | None]
+    muestras: Mapped[int]
+    prom_entrada: Mapped[float]
+    prom_salida: Mapped[float]
+    p95_entrada: Mapped[float]
+    p95_salida: Mapped[float]
+    max_entrada: Mapped[float]
+    max_salida: Mapped[float]
 
 
 class Auditoria(Base):

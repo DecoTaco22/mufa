@@ -228,13 +228,18 @@ mufa es open-core: esta edición gratuita es completa para redes chicas
 para operar en equipo: avisos al NOC, informes en PDF, predicción de
 capacidad y OLT GPON. Ver [docs/PLANES.md](docs/PLANES.md).
 
-Mientras Pro se construye, puedes apoyar el proyecto como
-[fundador](https://mufa.pages.dev/fundador): lo usas primero y a precio de
-fundador.
+Pro es una membresía mensual en [Ko-fi](https://mufa.pages.dev/pro): la
+licencia te llega por correo, se instala en **Ajustes › Plan** y se renueva
+sola cada mes. Los primeros 150 [fundadores](https://mufa.pages.dev/fundador)
+lo tienen a precio de fundador. Ya incluye la **predicción de capacidad** con
+un año de historial; los demás módulos se van sumando.
 
 ## Licencia
 
 Copyright (C) 2026 los autores de mufa.
+
+Los módulos Pro (`src/mufa/pro/`) tienen su propia licencia comercial:
+[LICENSE-PRO.md](LICENSE-PRO.md).
 
 [GNU AGPL v3](LICENSE): puedes usar, estudiar, modificar y redistribuir
 mufa; si ofreces una versión modificada como servicio a otros, tienes que

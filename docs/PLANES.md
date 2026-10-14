@@ -5,8 +5,10 @@ mufa es **open-core**:
 - **Este repositorio (AGPL-3.0)** es la edición gratuita. Es completa y útil
   por sí sola para una red chica, y cualquiera puede descargarla, probarla
   y revisar su código.
-- **Los módulos de pago** se distribuyen aparte, solo a quien tiene una
-  licencia. No están en este repositorio.
+- **Los módulos de pago** están en `src/mufa/pro/`, bajo una licencia
+  comercial ([LICENSE-PRO.md](../LICENSE-PRO.md)): se pueden leer y
+  auditar, pero usarlos requiere una licencia Pro vigente. Van incluidos en
+  todas las descargas y se activan al instalar la licencia.
 - **Los servicios de mufa** (mufa Avisos, respaldo externo) corren en los
   servidores de mufa y se activan con la suscripción.
 
@@ -15,11 +17,11 @@ mufa es **open-core**:
 | Plan | Mensual | Anual | Para quién |
 |---|---|---|---|
 | **Gratis** | $0 | $0 | El técnico o el ISP chico que quiere ordenar su red |
-| **Pro** | $29 | $290 (2 meses gratis) | El ISP que necesita no perderse una falla. **Equipos ilimitados** |
+| **Pro** | $29 | — | El ISP que necesita no perderse una falla. **Equipos ilimitados** |
 | **Empresa** | desde $199 | a cotizar | Operadores con NOC propio y requisitos de seguridad |
 
-Precios en dólares; Paddle cobra en la moneda local de cada país. Prueba
-de Pro de 14 días sin tarjeta.
+Precios en dólares. Por ahora se cobra con Ko-fi (PayPal o tarjeta), mes a
+mes.
 
 El plan Consultor ($79) se quitó: ofrecía casi lo mismo que Pro. Su lugar
 lo toman dos ofertas que no compiten con Pro:
@@ -89,6 +91,16 @@ Lo que define una licencia (`mufa.licencia`):
 - `cliente`: a nombre de quién está.
 - `max_equipos`: vacío en los planes de pago (ilimitados).
 - `vence`: fecha, u opcional para licencias perpetuas.
+- `id`: el mismo en cada mes de una suscripción.
+
+**Cómo se vende.** Pro es una membresía mensual de Ko-fi ($29, o $15 para
+los primeros 150 fundadores). Cada pago llega al sitio por el webhook de
+Ko-fi (`sitio/functions/api/kofi.js`), que firma una licencia de 35 días
+con la clave del emisor (secreto `LICENCIA_CLAVE` del sitio) y la avisa
+por Telegram para mandársela al cliente. Mientras siga pagando, la app trae
+sola la licencia del mes siguiente desde `/api/licencia/renovar`, mandando
+solo el `id`. Si cancela, vence sola y mufa vuelve al plan gratis sin
+perder datos.
 
 Cada módulo de pago protege sus rutas con
 `requiere_funcion(Funcion.X)`: si el plan instalado no lo incluye, la API

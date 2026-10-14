@@ -1,9 +1,12 @@
 import { Icono, type NombreIcono } from "../componentes/Icono";
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router";
-import { Encabezado } from "../componentes/ui";
+import { Cargando, Encabezado } from "../componentes/ui";
+import type { Licencia } from "../tipos";
+import { useDatos } from "../util";
+import { Capacidad } from "./Capacidad";
 
-// El sitio redirige /apoyar y /fundador a Ko-fi; así la app no cambia si cambia la cuenta.
+// El sitio redirige /apoyar, /fundador y /pro a Ko-fi; así la app no cambia si cambia la cuenta.
 export const SITIO = "https://mufa.pages.dev";
 
 type Modulo = {
@@ -58,7 +61,7 @@ export const MODULOS: Record<string, Modulo> = {
     color: "#30d158",
     vista: VistaCapacidad,
     beneficios: [
-      { icono: "prediccion", titulo: "Fecha de saturación", texto: "«Este uplink llega al 90 % en 6 semanas a este ritmo.»" },
+      { icono: "prediccion", titulo: "Fecha de saturación", texto: "«Este uplink llega al 80 % en 6 semanas a este ritmo.»" },
       { icono: "calendario", titulo: "Un año de historial", texto: "Compara meses, temporadas y el antes y después de cada cambio." },
       { icono: "reloj", titulo: "Horas pico", texto: "Por interfaz y por sitio, para planificar mantenimientos sin afectar a nadie." },
       { icono: "barras", titulo: "Ranking", texto: "Los enlaces más cargados de la red, ordenados por urgencia." },
@@ -84,10 +87,17 @@ export const MODULOS: Record<string, Modulo> = {
   },
 };
 
+// Los módulos que ya existen: con un plan que los incluye se muestran en vez de su presentación.
+const DISPONIBLES: Record<string, () => ReactNode> = { capacidad: Capacidad };
+
 export function PaginaPro() {
   const { modulo = "" } = useParams();
+  const { datos: licencia, cargando } = useDatos<Licencia>("/licencia");
   const m = MODULOS[modulo];
   if (!m) return <Encabezado titulo="mufa Pro" />;
+  const Modulo = DISPONIBLES[modulo];
+  if (Modulo && cargando && !licencia) return <Cargando />;
+  if (Modulo && licencia?.funciones.includes(modulo)) return <Modulo />;
   const Vista = m.vista;
   return (
     <div className="pro-pagina" style={{ ["--pro" as string]: m.color }}>
@@ -98,10 +108,12 @@ export function PaginaPro() {
           <p className="pro-frase">{m.frase}</p>
           <p className="tenue">{m.resumen}</p>
           <div className="fila">
-            <a className="boton primario" href={`${SITIO}/fundador`} target="_blank" rel="noreferrer">Ser fundador</a>
+            <a className="boton primario" href={`${SITIO}/pro`} target="_blank" rel="noreferrer">Obtener Pro</a>
             <Link className="boton" to="/planes">Ver planes</Link>
           </div>
-          <span className="tenue" style={{ fontSize: 12 }}>Pro está en camino. Los fundadores lo usan primero y a precio de fundador.</span>
+          <span className="tenue" style={{ fontSize: 12 }}>
+            {Modulo ? "Ya disponible en Pro." : "En camino: con Pro lo recibes apenas sale."} La licencia se instala en Ajustes › Plan.
+          </span>
         </div>
         <div className="pro-vista" aria-hidden="true"><Vista /></div>
       </section>
@@ -202,7 +214,7 @@ function VistaCapacidad() {
       <div className="grafica-cabeza"><strong>Uplink Nodo Norte · sfp1</strong><span className="pill medio">Satura en 6 semanas</span></div>
       <svg viewBox="0 0 240 110">
         <line x1="0" y1="22" x2="240" y2="22" stroke="#ff453a" strokeDasharray="4 4" opacity=".7" />
-        <text x="4" y="17" fill="#ff6961" fontSize="9">90 % de 1 Gbps</text>
+        <text x="4" y="17" fill="#ff6961" fontSize="9">80 % de 1 Gbps</text>
         <polyline points="0,95 20,90 40,92 60,82 80,80 100,72 120,70 140,60" fill="none" stroke="#30d158" strokeWidth="2.5" strokeLinejoin="round" />
         <polyline points="140,60 165,48 190,38 215,27 240,18" fill="none" stroke="#30d158" strokeWidth="2.5" strokeDasharray="5 4" opacity=".7" />
         <circle cx="222" cy="22" r="4" fill="#ff453a" />

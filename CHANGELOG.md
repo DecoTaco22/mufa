@@ -1,5 +1,17 @@
 # Cambios
 
+## v0.1.4
+
+- **Pro: predicción de capacidad.** Cada día se resume el tráfico de cada
+  interfaz (percentil 95, promedio y máximo) y se guarda un año. Con los
+  últimos 90 días, mufa calcula cuándo cada enlace llegará al 80 % de su
+  velocidad en horas pico, con un gráfico de la tendencia, el crecimiento
+  mensual y los enlaces ordenados por urgencia.
+- **Pro por suscripción:** la licencia de una membresía se renueva sola cada
+  mes mientras siga activa.
+- Pro y Empresa habilitan funciones distintas.
+- En la app, «Obtener Pro» lleva a la membresía.
+
 ## v0.1.3
 
 - **Mac:** se descarga como `mufa-macos.dmg`, la imagen de disco de

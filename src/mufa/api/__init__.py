@@ -36,6 +36,7 @@ from mufa.config import Ajustes, cargar_ajustes
 from mufa.db import crear_motor, fabrica_de_sesiones
 from mufa.licencia import LimiteDelPlan
 from mufa.migraciones import actualizar_base
+from mufa.modulos_pro import ModulosPro, Pasarela
 from mufa.tareas import Programador
 
 PREFIJO = "/api/v1"
@@ -69,7 +70,8 @@ def crear_app(ajustes: Ajustes | None = None, migrar: bool = True) -> FastAPI:
 
     sesiones = fabrica_de_sesiones(crear_motor(ajustes.url_base_datos))
     cifrador = Cifrador(cargar_o_crear_clave(ajustes.archivo_clave))
-    programador = Programador(ajustes, sesiones, cifrador)
+    pro = ModulosPro()
+    programador = Programador(ajustes, sesiones, cifrador, pro)
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -97,7 +99,10 @@ def crear_app(ajustes: Ajustes | None = None, migrar: bool = True) -> FastAPI:
         limitador=LimitadorDeIntentos(),
         token_inicial=primera_vez.preparar(sesiones, ajustes.dir_datos),
         programador=programador,
+        pro=pro,
     )
+    pro.estado = app.state.mufa
+    pro.cargar(app.state.mufa.plan()[0].llave_pro)
     if app.state.mufa.token_inicial:
         print(
             "\nmufa todavía no tiene administrador. Ábrelo en el navegador y usa este token:\n"
@@ -146,6 +151,8 @@ def crear_app(ajustes: Ajustes | None = None, migrar: bool = True) -> FastAPI:
         rutas_terminal,
     ):
         app.include_router(modulo.router, prefix=PREFIJO)
+    # Antes que la app web: si no, /{ruta:path} se quedaría con /api/v1/pro/...
+    app.mount(f"{PREFIJO}/pro", Pasarela(pro))
 
     @app.exception_handler(LimiteDelPlan)
     async def limite_del_plan(request: Request, error: LimiteDelPlan) -> JSONResponse:

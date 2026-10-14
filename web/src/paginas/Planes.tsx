@@ -41,13 +41,13 @@ export function Planes() {
         </Tarjeta>
         <Tarjeta titulo={<>Pro <span className="insignia-pro">Recomendado</span></>}>
           <div className="pila">
-            <div><span style={{ fontSize: 30, fontWeight: 700 }}>$29</span> <span className="tenue">al mes · $290 al año</span></div>
+            <div><span style={{ fontSize: 30, fontWeight: 700 }}>$29</span> <span className="tenue">al mes</span></div>
             <p className="tenue" style={{ margin: 0 }}>Equipos ilimitados y alertas que llegan a quien tiene que atenderlas, a cualquier hora.</p>
             <div>
-              <a className="boton primario" href={`${SITIO}/fundador`} target="_blank" rel="noreferrer">Ser fundador</a>
+              <a className="boton primario" href={`${SITIO}/pro`} target="_blank" rel="noreferrer">Obtener Pro</a>
             </div>
             <span className="tenue" style={{ fontSize: 12 }}>
-              Pro está en camino. Los fundadores lo usan primero y a precio de fundador.
+              Los primeros 150 fundadores lo tienen a $15 al mes. La licencia te llega por correo y se instala en Ajustes › Plan.
             </span>
           </div>
         </Tarjeta>

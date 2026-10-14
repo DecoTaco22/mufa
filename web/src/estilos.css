@@ -1404,3 +1404,55 @@ tr:hover .boton-icono, .boton-icono:focus-visible { opacity: 1; }
 .cuadro-roles td:first-child { min-width: 240px; }
 .cuadro-roles .si { color: var(--ok); width: 18px; height: 18px; }
 .cuadro-roles .no { color: var(--tx3); font-size: 12px; }
+
+/* Capacidad (Pro) */
+.capacidad-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.capacidad-cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 3px solid var(--line);
+}
+.capacidad-cifra strong {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.capacidad-cifra.critico { border-left-color: var(--rojo); }
+.capacidad-cifra.alto { border-left-color: var(--nar); }
+.capacidad-cifra.medio { border-left-color: var(--ama); }
+.capacidad-cifra.ok { border-left-color: var(--ok); }
+.capacidad-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.capacidad-datos div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.capacidad-datos strong {
+  font-size: 16px;
+}
+.grafica-capacidad {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.grafica-capacidad .eje { stroke: var(--line); stroke-width: 1; }
+.grafica-capacidad .etiqueta { fill: var(--tx3); font-size: 11px; }
+.grafica-capacidad .umbral { stroke: var(--rojo); stroke-dasharray: 5 5; stroke-width: 1.5; opacity: 0.8; }
+.grafica-capacidad .umbral-texto { fill: var(--rojo); }
+.grafica-capacidad .hoy { stroke: var(--tx3); stroke-dasharray: 2 4; }
+.grafica-capacidad .serie { fill: none; stroke: var(--acc); stroke-width: 2; stroke-linejoin: round; }
+.grafica-capacidad .punto { fill: var(--acc); }
+.grafica-capacidad .tendencia { stroke: var(--nar); stroke-width: 2; stroke-dasharray: 7 5; }
+tr.activa td { background: var(--sel); }
+.texto-alerta { color: var(--nar); font-weight: 500; }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from datetime import date
 from pathlib import Path
@@ -81,3 +82,77 @@ def test_instalar_licencia_por_la_api_amplia_el_limite(
     assert respuesta.status_code == 200
     assert respuesta.json()["plan"] == "pro"
     assert respuesta.json()["max_equipos"] == 200
+
+
+def test_pro_y_empresa_no_tienen_las_mismas_funciones(clave: Ed25519PrivateKey) -> None:
+    pro = licencia.verificar(emitir(clave, "ISP", "pro", None, None), HOY, _publica(clave))
+    empresa = licencia.verificar(emitir(clave, "ISP", "empresa", None, None), HOY, _publica(clave))
+    assert pro.permite(licencia.Funcion.INFORMES) and pro.permite(licencia.Funcion.OLT)
+    assert not pro.permite(licencia.Funcion.AAA)
+    assert empresa.permite(licencia.Funcion.AAA)
+    assert not licencia.PLAN_GRATIS.permite(licencia.Funcion.CAPACIDAD)
+
+
+def _servidor(respuestas: dict[str, str]):  # type: ignore[no-untyped-def]
+    pedidos: list[str] = []
+
+    def obtener(url: str) -> bytes:
+        pedidos.append(url)
+        if "id=" not in url or url.split("id=")[1] not in respuestas:
+            raise OSError("404")
+        return json.dumps({"licencia": respuestas[url.split("id=")[1]]}).encode()
+
+    return obtener, pedidos
+
+
+def test_la_suscripcion_trae_sola_la_licencia_del_mes_nuevo(
+    clave: Ed25519PrivateKey, tmp_path: Path
+) -> None:
+    archivo = tmp_path / "licencia.txt"
+    archivo.write_text(emitir(clave, "ISP", "pro", None, date(2026, 10, 12), "abc123"))
+    nueva = emitir(clave, "ISP", "pro", None, date(2026, 11, 12), "abc123")
+    obtener, pedidos = _servidor({"abc123": nueva})
+
+    plan = licencia.renovar(archivo, HOY, obtener, _publica(clave))
+    assert plan is not None and plan.vence == date(2026, 11, 12)
+    assert archivo.read_text() == nueva
+    assert pedidos == [f"{licencia.URL_RENOVAR}?id=abc123"]
+    # Ya renovada: falta más de un mes, no vuelve a preguntar.
+    assert licencia.renovar(archivo, HOY, obtener, _publica(clave)) is None
+    assert len(pedidos) == 1
+
+
+def test_sin_pago_nuevo_la_licencia_queda_como_estaba(
+    clave: Ed25519PrivateKey, tmp_path: Path
+) -> None:
+    archivo = tmp_path / "licencia.txt"
+    actual = emitir(clave, "ISP", "pro", None, date(2026, 10, 12), "abc123")
+    archivo.write_text(actual)
+    # El sitio devuelve la misma (no se cobró el mes) o una de otro cliente.
+    otra = emitir(clave, "Otro", "pro", None, date(2027, 1, 1), "zzz999")
+    for respuesta in (actual, otra):
+        obtener, _ = _servidor({"abc123": respuesta})
+        assert licencia.renovar(archivo, HOY, obtener, _publica(clave)) is None
+        assert archivo.read_text() == actual
+    # Sin conexión, tampoco pasa nada.
+    obtener, _ = _servidor({})
+    assert licencia.renovar(archivo, HOY, obtener, _publica(clave)) is None
+
+
+def test_una_licencia_vencida_se_recupera_si_llega_el_pago(
+    clave: Ed25519PrivateKey, tmp_path: Path
+) -> None:
+    archivo = tmp_path / "licencia.txt"
+    archivo.write_text(emitir(clave, "ISP", "pro", None, date(2026, 9, 30), "abc123"))
+    nueva = emitir(clave, "ISP", "pro", None, date(2026, 11, 4), "abc123")
+    obtener, _ = _servidor({"abc123": nueva})
+    plan = licencia.renovar(archivo, HOY, obtener, _publica(clave))
+    assert plan is not None and plan.vence == date(2026, 11, 4)
+
+
+def test_una_licencia_perpetua_no_se_renueva(clave: Ed25519PrivateKey, tmp_path: Path) -> None:
+    archivo = tmp_path / "licencia.txt"
+    archivo.write_text(emitir(clave, "ISP", "pro", None, None, "abc123"))
+    obtener, pedidos = _servidor({})
+    assert licencia.renovar(archivo, HOY, obtener, _publica(clave)) is None
+    assert pedidos == []

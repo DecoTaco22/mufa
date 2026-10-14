@@ -6,14 +6,23 @@ licencia sin conexión a internet, pero no puede fabricar una. Sin
 licencia, mufa funciona en el plan gratuito.
 
 Formato: base64url(json) + "." + base64url(firma).
+
+Las licencias mensuales (suscripción) vencen a los 35 días. Mientras la
+suscripción siga pagada, mufa trae sola la licencia nueva del sitio unos
+días antes de que venza: solo manda el identificador de la licencia.
 """
 
 from __future__ import annotations
 
 import base64
 import json
+import logging
+import os
+import urllib.parse
+import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 
@@ -27,6 +36,13 @@ CLAVE_PUBLICA_EMISOR = b"""-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEA3TiH3XZ0zQap9t91WuHNgrIrrol2ohCE1WSXdeB+DW4=
 -----END PUBLIC KEY-----
 """
+
+log = logging.getLogger("mufa.licencia")
+
+# De donde se trae la licencia nueva de una suscripción.
+URL_RENOVAR = os.environ.get("MUFA_URL_LICENCIAS", "https://mufa.pages.dev/api/licencia/renovar")
+# Se empieza a buscar la licencia nueva cuando faltan estos días.
+DIAS_ANTES_DE_RENOVAR = 10
 
 MAX_EQUIPOS_GRATIS = 10
 MAX_USUARIOS_GRATIS = 3
@@ -61,6 +77,10 @@ class Funcion(str, Enum):
     MESA_DE_AYUDA = "mesa_de_ayuda"
     MULTICLIENTE = "multicliente"
     RESTAURACION = "restauracion"
+    AVISOS = "avisos"
+    INFORMES = "informes"
+    CAPACIDAD = "capacidad"
+    OLT = "olt"
 
 
 FUNCIONES_GRATIS = frozenset(
@@ -74,6 +94,21 @@ FUNCIONES_GRATIS = frozenset(
         Funcion.FIBRA,
     }
 )
+FUNCIONES_PRO = FUNCIONES_GRATIS | {
+    Funcion.AVISOS,
+    Funcion.INFORMES,
+    Funcion.CAPACIDAD,
+    Funcion.OLT,
+    Funcion.RESTAURACION,
+    Funcion.AUTOMATIZACION,
+}
+# Empresa: todo, también AAA, mesa de ayuda y varios clientes.
+FUNCIONES_POR_PLAN: dict[str, frozenset[Funcion]] = {
+    "gratis": FUNCIONES_GRATIS,
+    "pro": FUNCIONES_PRO,
+    "consultor": FUNCIONES_PRO,
+    "empresa": frozenset(Funcion),
+}
 
 
 @dataclass(frozen=True)
@@ -82,6 +117,10 @@ class Plan:
     cliente: str
     max_equipos: int | None  # None = ilimitados (Pro y superiores)
     vence: date | None
+    # Identificador de la licencia: con él se trae la renovación de una suscripción.
+    id: str = ""
+    # Llave que abre los módulos Pro cifrados (mufa.modulos_pro). Solo en planes de pago.
+    llave_pro: str = ""
 
     def admite_otro_equipo(self, registrados: int) -> bool:
         return self.max_equipos is None or registrados < self.max_equipos
@@ -109,7 +148,7 @@ class Plan:
             )
 
     def permite(self, funcion: Funcion) -> bool:
-        return not self.es_gratis or funcion in FUNCIONES_GRATIS
+        return funcion in FUNCIONES_POR_PLAN.get(self.nombre, FUNCIONES_GRATIS)
 
     @property
     def funciones(self) -> list[Funcion]:
@@ -149,6 +188,8 @@ def verificar(texto: str, hoy: date, clave_publica: bytes | None = None) -> Plan
             int(contenido["max_equipos"]) if contenido.get("max_equipos") is not None else None
         ),
         vence=vence,
+        id=str(contenido.get("id") or ""),
+        llave_pro=str(contenido.get("pro") or ""),
     )
 
 
@@ -160,3 +201,63 @@ def plan_vigente(archivo: Path, hoy: date) -> tuple[Plan, str]:
         return verificar(archivo.read_text(encoding="utf-8"), hoy), ""
     except LicenciaInvalida as error:
         return PLAN_GRATIS, str(error)
+
+
+Obtener = Callable[[str], bytes]
+
+
+def _obtener(url: str) -> bytes:
+    pedido = urllib.request.Request(url, headers={"User-Agent": "mufa"})
+    with urllib.request.urlopen(pedido, timeout=20) as respuesta:
+        datos: bytes = respuesta.read(64 * 1024)
+        return datos
+
+
+def renovar(
+    archivo: Path,
+    hoy: date,
+    obtener: Obtener = _obtener,
+    clave_publica: bytes | None = None,
+) -> Plan | None:
+    """Trae la licencia nueva de una suscripción si la instalada está por vencer.
+
+    Devuelve el plan nuevo si la reemplazó; None si no hacía falta o no hay
+    una más nueva (la suscripción se canceló, o todavía no se cobró el mes).
+    """
+    if not archivo.exists():
+        return None
+    texto = archivo.read_text(encoding="utf-8").strip()
+    actual: Plan | None
+    try:
+        actual = verificar(texto, hoy, clave_publica)
+    except LicenciaInvalida:
+        # Vencida: igual se intenta, por si el pago del mes llegó tarde.
+        actual = None
+    if actual is not None:
+        if actual.vence is None or actual.vence - hoy > timedelta(days=DIAS_ANTES_DE_RENOVAR):
+            return None
+        identificador = actual.id
+    else:
+        try:
+            contenido = json.loads(_b64decode(texto.split(".")[0]))
+            identificador = str(contenido.get("id") or "")
+        except (ValueError, AttributeError):
+            return None
+    if not identificador:
+        return None
+    try:
+        respuesta = json.loads(
+            obtener(f"{URL_RENOVAR}?{urllib.parse.urlencode({'id': identificador})}")
+        )
+        nueva = verificar(str(respuesta["licencia"]), hoy, clave_publica)
+    except (OSError, ValueError, KeyError, TypeError, LicenciaInvalida) as error:
+        log.info("no hay licencia nueva todavía: %s", error)
+        return None
+    if nueva.id != identificador or nueva.vence is None:
+        return None
+    if actual is not None and actual.vence is not None and nueva.vence <= actual.vence:
+        return None
+    temporal = archivo.with_name(archivo.name + ".nueva")
+    temporal.write_text(str(respuesta["licencia"]).strip(), encoding="utf-8")
+    temporal.replace(archivo)
+    return nueva

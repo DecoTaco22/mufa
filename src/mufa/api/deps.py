@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated
 
@@ -16,6 +16,7 @@ from mufa.auth import LimitadorDeIntentos, usuario_de_token
 from mufa.cifrado import Cifrador
 from mufa.config import Ajustes
 from mufa.db import Usuario
+from mufa.modulos_pro import ModulosPro
 from mufa.permisos import Permiso, tiene_permiso
 from mufa.tareas import Programador
 
@@ -32,6 +33,7 @@ class EstadoApp:
     token_inicial: str | None = None
     # Las tareas automáticas: «Respaldar todo ahora» las usa.
     programador: Programador | None = None
+    pro: ModulosPro = field(default_factory=ModulosPro)
 
     @property
     def archivo_licencia(self) -> Path:
