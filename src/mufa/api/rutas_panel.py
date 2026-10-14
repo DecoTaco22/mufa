@@ -79,9 +79,7 @@ def panel(_: Lector, db: DB, estado: Estado) -> Panel:
             select(Respaldo.equipo_id, func.max(Respaldo.confirmado))
             .where(Respaldo.equipo_id.in_(respaldables))
             .group_by(Respaldo.equipo_id)
-        )
-        .tuples()
-        .all()
+        ).all()
     )
     limite = ahora() - _RESPALDO_AL_DIA
     caidos = db.execute(
@@ -89,7 +87,7 @@ def panel(_: Lector, db: DB, estado: Estado) -> Panel:
         .join(EstadoEquipo, EstadoEquipo.equipo_id == Equipo.id)
         .where(Equipo.snmp_version != "", EstadoEquipo.en_linea.is_(False))
         .order_by(Equipo.nombre)
-    ).tuples()
+    )
 
     return Panel(
         equipos=db.scalar(select(func.count()).select_from(Equipo)) or 0,

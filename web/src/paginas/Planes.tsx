@@ -12,14 +12,11 @@ const FILAS: [string, string, string][] = [
   ["Historial de tráfico", "7 días", "1 año"],
   ["Monitoreo, auditoría, respaldos, IPAM, VLANs, fibra, herramientas", "✓", "✓"],
   ["Alertas con tu propio bot y correo", "✓", "✓"],
-  ["mufa Avisos: bot de Telegram y correo listos", "Solo para ti", "Todo tu equipo y grupos"],
+  ["Avisos a cada persona del NOC con tu bot", "", "✓"],
   ["Escalamiento, guardias y «Lo tomo yo»", "", "✓"],
-  ["Ventanas de mantenimiento", "", "✓"],
   ["Predicción de capacidad", "", "✓"],
   ["OLT GPON (Huawei, ZTE)", "", "✓"],
   ["Informes en PDF con tu logo", "", "✓"],
-  ["Página de estado pública", "", "✓"],
-  ["Respaldo externo cifrado", "", "✓"],
   ["Soporte", "Comunidad", "1 día hábil"],
 ];
 

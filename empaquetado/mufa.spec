@@ -10,7 +10,8 @@ from PyInstaller.utils.hooks import collect_all
 
 RAIZ = Path(SPECPATH).parent
 datas, binaries, ocultos = [], [], []
-paquetes = ["pysnmp", "uvicorn", "websockets", "serial", "argon2", "pyotp", "webview"]
+# fpdf: lo usan los informes de Pro, que van cifrados (PyInstaller no ve que lo importan).
+paquetes = ["pysnmp", "uvicorn", "websockets", "serial", "argon2", "pyotp", "webview", "fpdf"]
 if sys.platform == "win32":
     # WebView2 se usa a través de pythonnet.
     paquetes += ["clr_loader", "pythonnet"]
@@ -33,7 +34,10 @@ for carpeta in ("migraciones", "web", "templates"):
 PRO_CIFRADO = FUENTE / "pro" / "modulos.cifrado"
 if PRO_CIFRADO.exists():
     datas.append((str(PRO_CIFRADO), "mufa/pro"))
-OCULTOS_PRO = ["statistics", "itertools", "math", "collections", "dataclasses", "decimal", "fractions"]
+OCULTOS_PRO = [
+    "statistics", "itertools", "math", "collections", "dataclasses", "decimal", "fractions",
+    "io", "json", "re", "secrets", "smtplib", "ssl", "email.message", "fastapi.responses",
+]
 
 a = Analysis(
     [str(RAIZ / "empaquetado/lanzador.py")],

@@ -226,6 +226,19 @@ export interface Evento {
   detalle: Record<string, unknown>;
 }
 
+export interface Actualizacion {
+  version_actual: string;
+  modo: "instalador" | "macos" | "portatil" | "tienda" | "servidor" | "codigo";
+  buscar: boolean;
+  revisada: string | null;
+  nueva: { version: string; publicada: string | null; notas: string } | null;
+  puede_instalar: boolean;
+  estado: "" | "descargando" | "instalando";
+  error: string;
+  pasos: string;
+  url_versiones: string;
+}
+
 export interface Licencia {
   plan: string;
   cliente: string;

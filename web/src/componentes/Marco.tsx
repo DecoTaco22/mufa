@@ -1,3 +1,4 @@
+import { AvisoActualizacion } from "./Actualizacion";
 import { Icono, type NombreIcono } from "./Icono";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
@@ -113,6 +114,7 @@ export function Marco() {
 
       {/* La clave reinicia la animación de entrada en cada cambio de página. */}
       <main className="contenido" key={ubicacion.pathname}>
+        <AvisoActualizacion />
         <Outlet />
       </main>
     </div>

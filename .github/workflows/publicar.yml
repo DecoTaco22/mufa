@@ -137,7 +137,9 @@ jobs:
           if-no-files-found: error
 
   servidor:
-    if: github.ref_type == 'tag'
+    # Solo desde el repositorio público: el privado tiene los módulos Pro legibles
+    # y una etiqueta ahí publicaría la imagen ghcr.io/<propietario>/mufa con ellos.
+    if: github.ref_type == 'tag' && github.repository == 'DecoTaco22/mufa'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -169,21 +171,31 @@ jobs:
           path: mufa-servidor.zip
 
   publicar:
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' && github.repository == 'DecoTaco22/mufa'
     needs: [escritorio, servidor]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: descargas
           merge-multiple: true
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - name: Manifiesto firmado para la actualización desde la app
+        # La clave privada está en Settings > Secrets and variables > Actions >
+        # Secrets (MUFA_FIRMA_ACTUALIZACIONES). La pública va en mufa/actualizacion.py.
+        env:
+          MUFA_FIRMA_ACTUALIZACIONES: ${{ secrets.MUFA_FIRMA_ACTUALIZACIONES }}
+        run: |
+          uv run --no-project --with cryptography python scripts/firmar_actualizacion.py \
+            "${GITHUB_REF_NAME#v}" descargas > descargas/actualizacion.firmada
       - name: Crear la versión en GitHub
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd descargas
           sha256sum *.exe *.dmg *.zip > SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" *.exe *.dmg *.zip SHA256SUMS.txt \
+          gh release create "$GITHUB_REF_NAME" *.exe *.dmg *.zip SHA256SUMS.txt actualizacion.firmada \
             --repo "$GITHUB_REPOSITORY" --title "mufa $GITHUB_REF_NAME" --generate-notes

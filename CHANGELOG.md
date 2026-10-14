@@ -1,5 +1,22 @@
 # Cambios
 
+## v0.1.5
+
+- **Actualizaciones:** mufa avisa cuando sale una versión nueva. En Windows
+  (con el instalador) y en Mac se instala con un clic desde Ajustes y la app
+  se vuelve a abrir sola. En un servidor, el aviso trae los pasos. Cada
+  instalador se verifica con una firma antes de instalarlo.
+- **Pro: avisos al equipo.** Tu bot de Telegram avisa a cada persona del NOC
+  según quién está de turno. Botón «Lo tomo yo» y escalamiento a los
+  supervisores si nadie lo toma; cuando el equipo vuelve, el aviso queda
+  resuelto en todos los mensajes.
+- **Pro: informes en PDF** con tu logo: disponibilidad (comparada con el mes
+  anterior), caídas, interfaces más cargadas y seguridad. Por correo el día 1.
+- **Pro: OLT GPON** Huawei y ZTE: cada ONU con su estado, potencia y
+  distancia; aviso de corte de un puerto PON (fibra o luz) y de señal baja.
+- Las páginas de Términos, Reembolsos y Privacidad describen el cobro con
+  Ko-fi y las conexiones que hace la app.
+
 ## v0.1.4
 
 - **Pro: predicción de capacidad.** Cada día se resume el tráfico de cada

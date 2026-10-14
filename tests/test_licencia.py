@@ -156,3 +156,40 @@ def test_una_licencia_perpetua_no_se_renueva(clave: Ed25519PrivateKey, tmp_path:
     obtener, pedidos = _servidor({})
     assert licencia.renovar(archivo, HOY, obtener, _publica(clave)) is None
     assert pedidos == []
+
+
+def test_la_licencia_trae_la_primera_llave_y_las_rotadas(clave: Ed25519PrivateKey) -> None:
+    texto = emitir(clave, "ISP", "pro", None, None, llaves=["k1", "k2", "k3"])
+    contenido = json.loads(licencia._b64decode(texto.split(".")[0]))
+    # Las versiones 0.1.4 y anteriores solo leen "pro".
+    assert (contenido["pro"], contenido["llaves"]) == ("k1", ["k2", "k3"])
+    assert licencia.verificar(texto, HOY, _publica(clave)).llaves_pro == ("k1", "k2", "k3")
+
+
+def test_con_llaves_viejas_trae_la_licencia_con_la_llave_nueva_sin_esperar(
+    clave: Ed25519PrivateKey, tmp_path: Path
+) -> None:
+    archivo = tmp_path / "licencia.txt"
+    actual = emitir(clave, "ISP", "pro", None, date(2026, 11, 1), "abc123", ["k1"])
+    archivo.write_text(actual)
+    rotada = emitir(clave, "ISP", "pro", None, date(2026, 11, 1), "abc123", ["k1", "k2"])
+    obtener, pedidos = _servidor({"abc123": rotada})
+
+    # Falta casi un mes: sin el aviso de llaves viejas no pregunta.
+    assert licencia.renovar(archivo, HOY, obtener, _publica(clave)) is None
+    assert pedidos == []
+    plan = licencia.renovar(archivo, HOY, obtener, _publica(clave), llaves_viejas=True)
+    assert plan is not None and plan.llaves_pro == ("k1", "k2")
+    assert archivo.read_text() == rotada
+
+
+def test_con_llaves_viejas_no_cambia_por_la_misma_licencia(
+    clave: Ed25519PrivateKey, tmp_path: Path
+) -> None:
+    archivo = tmp_path / "licencia.txt"
+    actual = emitir(clave, "ISP", "pro", None, date(2026, 11, 1), "abc123", ["k1"])
+    archivo.write_text(actual)
+    # La suscripción se canceló: el sitio no la vuelve a firmar con la llave nueva.
+    obtener, _ = _servidor({"abc123": actual})
+    assert licencia.renovar(archivo, HOY, obtener, _publica(clave), llaves_viejas=True) is None
+    assert archivo.read_text() == actual

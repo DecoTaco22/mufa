@@ -18,6 +18,7 @@ from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
+from pyasn1.type import univ
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     ContextData,
@@ -632,6 +633,53 @@ def recorrer(
         return filas[:limite]
 
     resultado: list[tuple[str, str]] = _consultar(host, cred, timeout, consulta)
+    return resultado
+
+
+def _primitivo(valor: Any) -> int | str:
+    """Un valor SNMP como número (enteros, contadores) o texto.
+
+    Un OCTET STRING binario (un número de serie GPON, por ejemplo) vuelve como
+    "0x" y sus bytes en hexadecimal, para que quien lo pidió lo interprete.
+    """
+    if isinstance(valor, univ.Integer):
+        return int(valor)
+    if isinstance(valor, univ.OctetString):
+        datos = bytes(valor.asOctets())
+        try:
+            texto = datos.rstrip(b"\x00").decode("utf-8")
+        except UnicodeDecodeError:
+            texto = None
+        if texto is not None and texto.isprintable():
+            return texto.strip()
+        return "0x" + datos.hex()
+    return _texto(valor)
+
+
+def leer_tablas(
+    host: str,
+    cred: CredencialesSNMP,
+    columnas: list[str],
+    limite: int = 50_000,
+    timeout: float = 3.0,
+) -> dict[str, dict[str, int | str]]:
+    """Varias columnas de una vez: columna -> {sufijo del OID: valor}. Solo lectura.
+
+    Por GETBULK, o por GETNEXT si el equipo no lo contesta (ver _tablas).
+    """
+
+    async def consulta(
+        motor: SnmpEngine, auth: CommunityData | UsmUserData, destino: UdpTransportTarget
+    ) -> dict[str, dict[str, int | str]]:
+        tablas = await _tablas(motor, auth, destino, columnas, limite)
+        return {
+            columna: {
+                sufijo: _primitivo(valor) for sufijo, valor in filas.items() if not _vacio(valor)
+            }
+            for columna, filas in tablas.items()
+        }
+
+    resultado: dict[str, dict[str, int | str]] = _consultar(host, cred, timeout, consulta)
     return resultado
 
 

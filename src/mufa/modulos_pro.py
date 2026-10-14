@@ -2,9 +2,13 @@
 
 El código de `mufa/pro/` (licencia comercial) no se publica legible: las
 descargas y el repositorio público llevan `mufa/pro/modulos.cifrado`, con
-los módulos cifrados (Fernet). La llave va dentro de cada licencia Pro, que
-está firmada por el emisor: sin una licencia pagada no hay llave, y sin
+los módulos cifrados (Fernet). Las llaves van dentro de cada licencia Pro,
+que está firmada por el emisor: sin una licencia pagada no hay llave, y sin
 llave no hay código que usar, aunque se modifique la parte AGPL.
+
+La llave se rota de vez en cuando (scripts/cifrar_pro.py --rotar): una
+licencia que ya no se renueva abre los módulos de las versiones que salieron
+mientras estaba pagada, pero no los de las siguientes.
 
 En el repositorio privado de desarrollo los módulos están legibles y se
 importan normalmente (salvo que MUFA_PRO_SOLO_CIFRADO=1, para probar la
@@ -25,13 +29,13 @@ import os
 import sys
 import threading
 import zlib
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import date
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
@@ -49,12 +53,17 @@ class ErrorPro(Exception):
     pass
 
 
-def descifrar(archivo: Path, llave: str) -> dict[str, str]:
-    """{nombre del módulo: código fuente} del archivo cifrado."""
+def descifrar(archivo: Path, llaves: str | Sequence[str]) -> dict[str, str]:
+    """{nombre del módulo: código fuente} del archivo cifrado, con la llave que lo abra."""
+    if isinstance(llaves, str):
+        llaves = [llaves]
     try:
-        comprimido = Fernet(llave.encode("ascii")).decrypt(archivo.read_bytes())
+        if not llaves:
+            raise ValueError("sin llaves")
+        fernet = MultiFernet([Fernet(llave.encode("ascii")) for llave in llaves])
+        comprimido = fernet.decrypt(archivo.read_bytes())
     except (InvalidToken, ValueError) as error:
-        raise ErrorPro("la llave de Pro de la licencia no abre estos módulos") from error
+        raise ErrorPro("las llaves de Pro de la licencia no abren estos módulos") from error
     fuentes = json.loads(zlib.decompress(comprimido))
     if not isinstance(fuentes, dict):
         raise ErrorPro("archivo de módulos Pro dañado")
@@ -101,7 +110,9 @@ class ModulosPro:
     def __init__(self, archivo: Path = ARCHIVO_CIFRADO) -> None:
         self._archivo = archivo
         self._registro: ModuleType | None = None
-        self._llave: str | None = None
+        self._llaves: tuple[str, ...] = ()
+        # La licencia trae llaves pero ninguna abre los módulos de esta versión.
+        self.faltan_llaves = False
         self._candado = threading.Lock()
         self.app: FastAPI | None = None
         # El EstadoApp del servidor: las rutas de Pro lo usan como las demás.
@@ -111,26 +122,31 @@ class ModulosPro:
     def cargados(self) -> bool:
         return self._registro is not None
 
-    def cargar(self, llave: str | None) -> bool:
+    def cargar(self, llaves: Sequence[str]) -> bool:
         """Activa Pro si la licencia trae la llave de los módulos (o están legibles)."""
+        llaves = tuple(llaves)
         with self._candado:
-            if self._registro is not None and (llave == self._llave or _hay_legibles()):
+            if self._registro is not None and (llaves == self._llaves or _hay_legibles()):
                 return True
             if not _hay_legibles():
-                if not llave or not self._archivo.exists():
+                if not llaves or not self._archivo.exists():
                     return False
                 try:
-                    fuentes = descifrar(self._archivo, llave)
+                    fuentes = descifrar(self._archivo, llaves)
                 except ErrorPro as error:
                     log.warning("%s", error)
+                    self.faltan_llaves = True
                     return False
+                self.faltan_llaves = False
                 sys.meta_path.insert(0, _Buscador(fuentes))
             registro = importlib.import_module(REGISTRO)
+            if hasattr(registro, "al_cargar"):
+                registro.al_cargar(self.estado)
             app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
             app.state.mufa = self.estado
             for router in registro.ROUTERS:
                 app.include_router(router)
-            self.app, self._registro, self._llave = app, registro, llave
+            self.app, self._registro, self._llaves = app, registro, llaves
             log.info("módulos Pro cargados")
             return True
 
@@ -139,6 +155,12 @@ class ModulosPro:
         if self._registro is not None:
             tarea: Callable[[Session, Any, date], None] = self._registro.despues_del_sondeo
             tarea(db, plan, hoy)
+
+    def tarea_frecuente(self, db: Session, plan: Any) -> None:
+        """Lo que Pro revisa seguido (cada vuelta del programador, unos 15 segundos)."""
+        if self._registro is not None and hasattr(self._registro, "cada_rato"):
+            tarea: Callable[[Session, Any], None] = self._registro.cada_rato
+            tarea(db, plan)
 
 
 class Pasarela:

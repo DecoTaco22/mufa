@@ -66,6 +66,9 @@ Name: "{autodesktop}\mufa"; Filename: "{app}\mufa.exe"; Tasks: escritorio
 [Run]
 ; runasoriginaluser: mufa se abre con tu usuario, no como administrador.
 Filename: "{app}\mufa.exe"; Description: "Abrir mufa"; Flags: nowait postinstall skipifsilent runasoriginaluser
+; La actualización desde la app corre el instalador sin ventanas (/SILENT /REABRIR=1):
+; al terminar vuelve a abrir mufa.
+Filename: "{app}\mufa.exe"; Flags: nowait runasoriginaluser; Check: Reabrir
 
 [Code]
 const
@@ -79,6 +82,11 @@ begin
     (RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) and (Version <> '') and (Version <> '0.0.0.0')) or
     (RegQueryStringValue(HKLM, WEBVIEW2, 'pv', Version) and (Version <> '') and (Version <> '0.0.0.0')) or
     (RegQueryStringValue(HKCU, WEBVIEW2, 'pv', Version) and (Version <> '') and (Version <> '0.0.0.0'));
+end;
+
+function Reabrir: Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:REABRIR|0}') = '1');
 end;
 
 function InitializeSetup: Boolean;

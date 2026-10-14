@@ -9,8 +9,9 @@ mufa es **open-core**:
   comercial ([LICENSE-PRO.md](../LICENSE-PRO.md)): se pueden leer y
   auditar, pero usarlos requiere una licencia Pro vigente. Van incluidos en
   todas las descargas y se activan al instalar la licencia.
-- **Los servicios de mufa** (mufa Avisos, respaldo externo) corren en los
-  servidores de mufa y se activan con la suscripción.
+- **Los servicios de mufa** (respaldo externo, más adelante) correrían en
+  los servidores de mufa. Hoy todo, incluidos los avisos al equipo, corre en
+  la instalación del cliente.
 
 ## Precios
 
@@ -56,7 +57,7 @@ Los pedidos de ambos llegan por el formulario del sitio (tipos «servicio» y
 | **Herramientas**: ping, traceroute, MTR, subredes, "¿dónde está?" | ✓ | ✓ | ✓ |
 | Mapa de topología y modo NOC | ✓ | con su logo | con su logo |
 | Alertas con bot y correo propios | ✓ | ✓ | ✓ |
-| **mufa Avisos** (bot de Telegram y correo de mufa) | solo el dueño, 20/día | contactos y grupos | contactos y grupos |
+| **Avisos al equipo** con el bot propio: contactos y grupos | | ✓ | ✓ |
 | Escalamiento, guardias, "Lo tomo yo" | | ✓ | ✓ |
 | Ventanas de mantenimiento | | ✓ | ✓ |
 | Predicción de capacidad | | ✓ | ✓ |

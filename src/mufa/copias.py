@@ -310,7 +310,7 @@ def ultimos_respaldos(db: Session) -> list[tuple[Respaldo, Equipo]]:
         .where(Respaldo.id.in_(ultimos))
         .order_by(Equipo.nombre)
     )
-    return [(r, e) for r, e in db.execute(consulta).tuples()]
+    return [(r, e) for r, e in db.execute(consulta)]
 
 
 def enviar(

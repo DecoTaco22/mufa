@@ -83,6 +83,15 @@ export function fecha(iso: string | null | undefined): string {
   return FECHA.format(new Date(valor));
 }
 
+const DIA = new Intl.DateTimeFormat("es", { dateStyle: "medium" });
+
+/** Una fecha sin hora (AAAA-MM-DD), tal cual, sin correrla por la zona horaria. */
+export function dia(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const [a = 0, m = 1, d = 1] = iso.split("-").map(Number);
+  return DIA.format(new Date(a, m - 1, d));
+}
+
 export function hace(iso: string | null | undefined): string {
   if (!iso) return "nunca";
   const valor = /[zZ]|[+-]\d\d:\d\d$/.test(iso) ? iso : `${iso}Z`;

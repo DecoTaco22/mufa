@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from mufa import __version__, primera_vez
+from mufa.actualizacion import Actualizador
 from mufa.api import (
     rutas_alertas,
     rutas_auditorias,
@@ -71,7 +72,8 @@ def crear_app(ajustes: Ajustes | None = None, migrar: bool = True) -> FastAPI:
     sesiones = fabrica_de_sesiones(crear_motor(ajustes.url_base_datos))
     cifrador = Cifrador(cargar_o_crear_clave(ajustes.archivo_clave))
     pro = ModulosPro()
-    programador = Programador(ajustes, sesiones, cifrador, pro)
+    actualizador = Actualizador(ajustes.dir_datos)
+    programador = Programador(ajustes, sesiones, cifrador, pro, actualizador)
 
     @asynccontextmanager
     async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
@@ -100,9 +102,10 @@ def crear_app(ajustes: Ajustes | None = None, migrar: bool = True) -> FastAPI:
         token_inicial=primera_vez.preparar(sesiones, ajustes.dir_datos),
         programador=programador,
         pro=pro,
+        actualizador=actualizador,
     )
     pro.estado = app.state.mufa
-    pro.cargar(app.state.mufa.plan()[0].llave_pro)
+    pro.cargar(app.state.mufa.plan()[0].llaves_pro)
     if app.state.mufa.token_inicial:
         print(
             "\nmufa todavía no tiene administrador. Ábrelo en el navegador y usa este token:\n"

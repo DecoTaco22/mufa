@@ -120,6 +120,7 @@ class Servidor:
     def __init__(self) -> None:
         self.url = ""
         self.token: str | None = None
+        self.actualizador: Any = None
         self._uvicorn: Any = None
         self._hilo: threading.Thread | None = None
 
@@ -134,6 +135,7 @@ class Servidor:
         puerto = _puerto_libre()
         self.url = f"http://{HOST}:{puerto}"
         self.token = app.state.mufa.token_inicial
+        self.actualizador = app.state.mufa.actualizador
         self._uvicorn = uvicorn.Server(
             uvicorn.Config(app, host=HOST, port=puerto, server_header=False, log_level="warning")
         )
@@ -162,6 +164,10 @@ def _preparar(ventana: Any, servidor: Servidor) -> None:
     try:
         _estado(ventana, "Preparando tus datos…")
         servidor.arrancar()
+        if servidor.actualizador is not None:
+            # Al instalar una versión nueva, mufa se cierra para que el instalador
+            # pueda reemplazar sus archivos (y la vuelve a abrir al terminar).
+            servidor.actualizador.al_cerrar = ventana.destroy
         _estado(ventana, "Listo")
         ventana.evaluate_js("document.getElementById('centro').classList.add('saliendo')")
         time.sleep(0.35)

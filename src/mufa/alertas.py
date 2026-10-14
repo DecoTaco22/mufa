@@ -41,6 +41,10 @@ TIPOS: dict[str, str] = {
     "auditoria.critico": "Hallazgo crítico",
     "respaldo.cambio": "Cambió la configuración de un equipo",
     "respaldo.error": "Falló un respaldo",
+    "olt.corte_pon": "Se cayeron las ONU de un puerto PON",
+    "olt.pon_recuperado": "Volvieron las ONU de un puerto PON",
+    "onu.senal_baja": "Señal baja en una ONU",
+    "informe.error": "No se pudo mandar el informe mensual",
 }
 
 _CURSOR = "alertas.ultimo_evento"

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api";
+import { TarjetaActualizacion } from "../componentes/Actualizacion";
 import { Campo, Encabezado, Formulario, Tarjeta } from "../componentes/ui";
 import { useSesion } from "../sesion";
 import type { Licencia, Sitio } from "../tipos";
@@ -19,6 +20,7 @@ export function Ajustes() {
         </div>
         <div className="crece pila" style={{ gap: 14 }}>
           <LicenciaYPlan />
+          <TarjetaActualizacion />
           {puede(usuario?.rol, "gestionar_equipos") && <Sitios />}
           <AcercaDe />
         </div>

@@ -12,6 +12,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session, sessionmaker
 
 from mufa import alertas, dos_pasos, licencia
+from mufa.actualizacion import Actualizador
 from mufa.auth import LimitadorDeIntentos, usuario_de_token
 from mufa.cifrado import Cifrador
 from mufa.config import Ajustes
@@ -34,6 +35,7 @@ class EstadoApp:
     # Las tareas automáticas: «Respaldar todo ahora» las usa.
     programador: Programador | None = None
     pro: ModulosPro = field(default_factory=ModulosPro)
+    actualizador: Actualizador | None = None
 
     @property
     def archivo_licencia(self) -> Path:

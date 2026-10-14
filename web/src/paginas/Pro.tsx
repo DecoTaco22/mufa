@@ -4,7 +4,10 @@ import { Link, useParams } from "react-router";
 import { Cargando, Encabezado } from "../componentes/ui";
 import type { Licencia } from "../tipos";
 import { useDatos } from "../util";
+import { Avisos } from "./Avisos";
 import { Capacidad } from "./Capacidad";
+import { Informes } from "./Informes";
+import { OltGpon } from "./Olt";
 
 // El sitio redirige /apoyar, /fundador y /pro a Ko-fi; así la app no cambia si cambia la cuenta.
 export const SITIO = "https://mufa.pages.dev";
@@ -25,16 +28,16 @@ export const MODULOS: Record<string, Modulo> = {
     titulo: "Avisos para tu equipo",
     frase: "Que la alerta le llegue a quien la tiene que atender.",
     resumen:
-      "En el plan gratis las alertas te llegan a ti. Con Pro, el bot de Telegram y el correo de mufa avisan a todo tu NOC: técnicos, guardias y supervisores, sin que nadie configure un bot.",
+      "En el plan gratis las alertas llegan a un chat. Con Pro, tu bot de Telegram avisa a cada persona del NOC según quién está de turno, con «Lo tomo yo» y escalamiento a los supervisores.",
     color: "#0a84ff",
     vista: VistaAvisos,
     beneficios: [
-      { icono: "usuarios", titulo: "Todo tu equipo", texto: "Contactos y grupos de Telegram ilimitados. Cada técnico se une con un enlace." },
+      { icono: "usuarios", titulo: "Todo tu equipo", texto: "Contactos y grupos de Telegram ilimitados. Cada técnico se une con un enlace del bot." },
       { icono: "reloj", titulo: "Escalamiento", texto: "Si nadie toma la alerta en 10 minutos, se avisa al supervisor. Nada queda sin dueño." },
       { icono: "luna", titulo: "Guardias", texto: "La alerta de las 3 a. m. le llega a quien está de turno, no a todos." },
       { icono: "mano", titulo: "«Lo tomo yo»", texto: "Un botón en Telegram para que el resto sepa que ya hay alguien trabajando en la falla." },
     ],
-    pasos: ["Activas Pro en Ajustes › Plan.", "Invitas a tu equipo con un enlace de Telegram.", "Defines guardias y a quién escalar. Listo."],
+    pasos: ["Eliges el bot de uno de tus canales de Telegram.", "Cada técnico abre su enlace y queda conectado.", "Defines guardias y supervisores. Listo."],
     para: "ISPs con más de un técnico, o con clientes corporativos que no toleran una caída sin atender.",
   },
   informes: {
@@ -83,12 +86,12 @@ export const MODULOS: Record<string, Modulo> = {
       { icono: "candado", titulo: "Solo lectura", texto: "Como todo mufa: consulta la OLT, nunca le cambia nada." },
     ],
     pasos: ["Agregas la OLT con SNMP.", "mufa descubre los puertos PON y las ONU.", "Ves la señal de cada cliente y recibes avisos."],
-    para: "ISPs de fibra con OLT Huawei MA5600/MA5800 o ZTE C300/C600.",
+    para: "ISPs de fibra con OLT Huawei MA5600T/MA5800 o ZTE C300/C320.",
   },
 };
 
 // Los módulos que ya existen: con un plan que los incluye se muestran en vez de su presentación.
-const DISPONIBLES: Record<string, () => ReactNode> = { capacidad: Capacidad };
+const DISPONIBLES: Record<string, () => ReactNode> = { avisos: Avisos, capacidad: Capacidad, informes: Informes, olt: OltGpon };
 
 export function PaginaPro() {
   const { modulo = "" } = useParams();
@@ -182,7 +185,7 @@ function VistaAvisos() {
       <div className="burbuja alerta">
         <strong>🔴 Caído: CCR Nodo Norte</strong>
         <span>10.20.4.1 · sin respuesta hace 2 min</span>
-        <div className="burbuja-botones"><span>✋ Lo tomo yo</span><span>🔕 Silenciar</span></div>
+        <div className="burbuja-botones"><span>🙋 Lo tomo yo</span></div>
       </div>
       <div className="burbuja sistema">Ana tomó la alerta · 02:14</div>
       <div className="burbuja ok"><strong>🟢 Recuperado: CCR Nodo Norte</strong><span>Estuvo caído 7 min</span></div>

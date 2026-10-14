@@ -8,9 +8,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy import func, select
 
-from mufa import __version__, auth, licencia, marcas, primera_vez, traslado
+from mufa import __version__, actualizacion, auth, licencia, marcas, primera_vez, traslado
 from mufa.api.deps import DB, Estado, requiere
 from mufa.api.esquemas import (
+    ActualizacionAjustes,
+    ActualizacionSalida,
     ArchivoExportado,
     EstadoInicial,
     EventoSalida,
@@ -19,6 +21,7 @@ from mufa.api.esquemas import (
     LicenciaSalida,
     MarcaSalida,
     PrimerAdmin,
+    VersionNueva,
 )
 from mufa.db import Equipo, Evento, Usuario, ahora
 from mufa.permisos import Permiso, Rol
@@ -196,8 +199,69 @@ def instalar_licencia(
     estado.archivo_licencia.parent.mkdir(parents=True, exist_ok=True)
     estado.archivo_licencia.write_text(entrada.licencia.strip(), encoding="utf-8")
     registrar(db, admin, "licencia.instalar", plan.cliente, {"plan": plan.nombre})
-    estado.pro.cargar(plan.llave_pro)
+    estado.pro.cargar(plan.llaves_pro)
     return _licencia(db, estado)
+
+
+def _actualizador(estado: Estado) -> actualizacion.Actualizador:
+    if estado.actualizador is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "sin actualizaciones")
+    return estado.actualizador
+
+
+def _actualizacion(db: DB, estado: Estado) -> ActualizacionSalida:
+    a = _actualizador(estado)
+    nueva = a.nueva
+    return ActualizacionSalida(
+        version_actual=a.version_actual,
+        modo=a.modo.value,
+        buscar=a.busca and actualizacion.buscar_activado(db),
+        revisada=a.revisada,
+        nueva=VersionNueva(version=nueva.version, publicada=nueva.publicada, notas=nueva.notas)
+        if nueva
+        else None,
+        puede_instalar=a.archivo is not None,
+        estado=a.estado,
+        error=a.error,
+        pasos=a.pasos,
+        url_versiones=actualizacion.URL_VERSIONES,
+    )
+
+
+@router.get("/sistema/actualizacion")
+def ver_actualizacion(_: Lector, db: DB, estado: Estado) -> ActualizacionSalida:
+    return _actualizacion(db, estado)
+
+
+@router.put("/sistema/actualizacion")
+def ajustar_actualizacion(
+    entrada: ActualizacionAjustes, admin: Admin, db: DB, estado: Estado
+) -> ActualizacionSalida:
+    actualizacion.cambiar_buscar(db, entrada.buscar)
+    registrar(db, admin, "sistema.buscar_actualizaciones", "sí" if entrada.buscar else "no")
+    db.flush()
+    return _actualizacion(db, estado)
+
+
+@router.post("/sistema/actualizacion/buscar")
+async def buscar_actualizacion(_: Admin, db: DB, estado: Estado) -> ActualizacionSalida:
+    a = _actualizador(estado)
+    if not a.busca:
+        raise HTTPException(status.HTTP_409_CONFLICT, "esta instalación no busca actualizaciones")
+    await asyncio.to_thread(a.buscar)
+    return _actualizacion(db, estado)
+
+
+@router.post("/sistema/actualizacion/instalar", status_code=status.HTTP_202_ACCEPTED)
+def instalar_actualizacion(admin: Admin, db: DB, estado: Estado) -> ActualizacionSalida:
+    a = _actualizador(estado)
+    nueva = a.nueva
+    try:
+        a.instalar_en_segundo_plano()
+    except RuntimeError as error:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from None
+    registrar(db, admin, "sistema.actualizar", nueva.version if nueva else "")
+    return _actualizacion(db, estado)
 
 
 @router.get("/eventos")

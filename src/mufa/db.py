@@ -381,6 +381,109 @@ class InterfazVigilada(Base):
     creado: Mapped[datetime] = mapped_column(default=ahora)
 
 
+class Olt(Base):
+    """Un equipo que se sondea también como OLT GPON (mufa Pro)."""
+
+    __tablename__ = "olts"
+
+    equipo_id: Mapped[int] = mapped_column(
+        ForeignKey("equipos.id", ondelete="CASCADE"), primary_key=True
+    )
+    # Qué MIB usa: "huawei" (MA5600T/MA5800) o "zte" (C300/C320).
+    perfil: Mapped[str] = mapped_column(String(16))
+    # Potencia de recepción de la ONU a partir de la cual se avisa (dBm).
+    umbral_rx_dbm: Mapped[float] = mapped_column(default=-27.0)
+    ultimo_sondeo: Mapped[datetime | None]
+    error: Mapped[str] = mapped_column(Text, default="")
+    creado: Mapped[datetime] = mapped_column(default=ahora)
+
+
+class OnuGpon(Base):
+    """El último estado conocido de una ONU, leído de su OLT."""
+
+    __tablename__ = "onus_gpon"
+    __table_args__ = (UniqueConstraint("equipo_id", "pon_if_index", "onu_id", name="uq_onu_gpon"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    equipo_id: Mapped[int] = mapped_column(ForeignKey("equipos.id", ondelete="CASCADE"))
+    pon_if_index: Mapped[int] = mapped_column(BigInteger)
+    onu_id: Mapped[int]
+    puerto: Mapped[str] = mapped_column(String(64), default="")
+    nombre: Mapped[str] = mapped_column(String(255), default="")
+    serie: Mapped[str] = mapped_column(String(64), default="")
+    # en_linea, sin_senal (LOS), sin_energia (dying gasp), desconectada, otro
+    estado: Mapped[str] = mapped_column(String(16), default="otro")
+    causa: Mapped[str] = mapped_column(String(64), default="")
+    rx_dbm: Mapped[float | None]
+    tx_dbm: Mapped[float | None]
+    distancia_m: Mapped[int | None]
+    # Cuándo cambió de estado por última vez (para «caída hace 2 h»).
+    cambio: Mapped[datetime] = mapped_column(default=ahora)
+    visto: Mapped[datetime] = mapped_column(default=ahora)
+    # Ya se avisó la señal baja (se vuelve a avisar al recuperarse 1 dB).
+    aviso_senal: Mapped[bool] = mapped_column(default=False)
+
+
+class ContactoNoc(Base):
+    """Alguien del equipo (o un grupo) que recibe los avisos de Pro por Telegram."""
+
+    __tablename__ = "contactos_noc"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(120))
+    # El chat de Telegram, cuando la persona abrió el enlace del bot.
+    telegram_chat: Mapped[str | None] = mapped_column(String(64))
+    # Código del enlace para unirse (t.me/<bot>?start=<código>).
+    codigo: Mapped[str] = mapped_column(String(32), unique=True)
+    # Los supervisores reciben lo que nadie tomó a tiempo.
+    supervisor: Mapped[bool] = mapped_column(default=False)
+    activo: Mapped[bool] = mapped_column(default=True)
+    creado: Mapped[datetime] = mapped_column(default=ahora)
+
+
+class Guardia(Base):
+    """Un turno semanal: quién atiende los avisos esos días a esas horas."""
+
+    __tablename__ = "guardias"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    contacto_id: Mapped[int] = mapped_column(ForeignKey("contactos_noc.id", ondelete="CASCADE"))
+    # Días de la semana: "0" lunes ... "6" domingo, por ejemplo "01234".
+    dias: Mapped[str] = mapped_column(String(7))
+    # Hora local del servidor, "HH:MM". Si hasta <= desde, el turno cruza la medianoche.
+    desde: Mapped[str] = mapped_column(String(5))
+    hasta: Mapped[str] = mapped_column(String(5))
+
+    contacto: Mapped[ContactoNoc] = relationship()
+
+
+class Incidente(Base):
+    """Un aviso al equipo: quién lo recibió, quién lo tomó y cuándo se resolvió."""
+
+    __tablename__ = "incidentes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    evento_id: Mapped[int | None] = mapped_column(ForeignKey("eventos.id", ondelete="SET NULL"))
+    tipo: Mapped[str] = mapped_column(String(64))
+    objeto: Mapped[str] = mapped_column(String(255))
+    titulo: Mapped[str] = mapped_column(String(255))
+    detalle: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # abierto, tomado, resuelto
+    estado: Mapped[str] = mapped_column(String(16), default="abierto", index=True)
+    # 0 = avisado a la guardia; 1 = escalado a los supervisores.
+    nivel: Mapped[int] = mapped_column(default=0)
+    tomado_por_id: Mapped[int | None] = mapped_column(
+        ForeignKey("contactos_noc.id", ondelete="SET NULL")
+    )
+    tomado: Mapped[datetime | None]
+    creado: Mapped[datetime] = mapped_column(default=ahora)
+    resuelto: Mapped[datetime | None]
+    # Mensajes enviados: [[chat, id del mensaje], ...] para editarlos al tomarlo o resolverlo.
+    mensajes: Mapped[list[list[str]]] = mapped_column(JSON, default=list)
+
+    tomado_por: Mapped[ContactoNoc | None] = relationship()
+
+
 class AjusteSistema(Base):
     """Valores internos que el servidor necesita recordar entre reinicios."""
 

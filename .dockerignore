@@ -18,3 +18,7 @@ scripts
 *.key
 licencia.txt
 informe-*.html
+# Módulos Pro legibles (solo existen en el repositorio privado): la imagen lleva
+# únicamente mufa/pro/__init__.py y modulos.cifrado.
+src/mufa/pro/*.py
+!src/mufa/pro/__init__.py

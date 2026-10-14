@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
@@ -13,6 +14,9 @@ from mufa.auth import hashear_password
 from mufa.config import Ajustes
 from mufa.db import Usuario
 from mufa.permisos import Rol
+
+# Las pruebas no salen a internet a buscar versiones nuevas (test_actualizacion las simula).
+os.environ["MUFA_BUSCAR_ACTUALIZACIONES"] = "0"
 
 PASSWORD = "una-clave-bien-larga"
 

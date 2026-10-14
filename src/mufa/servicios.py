@@ -40,7 +40,7 @@ def hallazgos_abiertos(db: Session) -> list[tuple[HallazgoGuardado, Equipo]]:
         .join(Equipo, Equipo.id == ultima.c.equipo_id)
         .order_by(Equipo.nombre, HallazgoGuardado.id)
     )
-    return [(hallazgo, equipo) for hallazgo, equipo in filas.tuples()]
+    return [(hallazgo, equipo) for hallazgo, equipo in filas]
 
 
 # Cuánto resta cada hallazgo abierto al puntaje de seguridad (0 a 100).

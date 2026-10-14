@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from mufa import alertas, copias, licencia, marcas, monitoreo, respaldos, servicios
+from mufa import actualizacion, alertas, copias, licencia, marcas, monitoreo, respaldos, servicios
 from mufa.cifrado import Cifrador
 from mufa.config import Ajustes
 from mufa.db import Equipo
@@ -29,6 +29,8 @@ _SONDEOS_EN_PARALELO = 16
 _RESPALDOS_EN_PARALELO = 4
 # Una suscripción se renueva una vez al mes: alcanza con mirar cada 6 horas.
 _SEGUNDOS_ENTRE_RENOVACIONES = 6 * 3600
+# Buscar una versión nueva: una vez al día (la primera, al arrancar).
+_SEGUNDOS_ENTRE_BUSQUEDAS = 24 * 3600
 
 
 class Programador:
@@ -38,15 +40,18 @@ class Programador:
         sesiones: sessionmaker[Session],
         cifrador: Cifrador,
         pro: ModulosPro | None = None,
+        actualizador: actualizacion.Actualizador | None = None,
     ) -> None:
         self._ajustes = ajustes
         self._pro = pro or ModulosPro()
+        self._actualizador = actualizador
         self._sesiones = sesiones
         self._cifrador = cifrador
         self._detener = threading.Event()
         self._hilo: threading.Thread | None = None
         self._proximo_sondeo = 0.0
         self._proxima_renovacion = 0.0
+        self._proxima_busqueda = 0.0
         # Un solo respaldo general a la vez (el programado o el de «Respaldar todo»).
         self._respaldando = threading.Lock()
 
@@ -80,9 +85,13 @@ class Programador:
                 self._proteger(self._respaldo_programado)
             if self._ajustes.enviar_alertas:
                 self._proteger(self.enviar_alertas)
+                self._proteger(self.tarea_pro_frecuente)
             if ahora >= self._proxima_renovacion:
                 self._proxima_renovacion = ahora + _SEGUNDOS_ENTRE_RENOVACIONES
                 self._proteger(self.renovar_licencia)
+            if ahora >= self._proxima_busqueda:
+                self._proxima_busqueda = ahora + _SEGUNDOS_ENTRE_BUSQUEDAS
+                self._proteger(self.buscar_actualizacion)
             self._detener.wait(_SEGUNDOS_ENTRE_REVISIONES)
 
     @staticmethod
@@ -93,15 +102,44 @@ class Programador:
             log.exception("falló la tarea automática %s", tarea.__name__)
 
     def renovar_licencia(self) -> None:
-        """La suscripción de Pro: trae la licencia del mes nuevo antes de que venza."""
-        nueva = licencia.renovar(self._ajustes.dir_datos / "licencia.txt", licencia.hoy())
+        """La suscripción de Pro: trae la licencia del mes nuevo antes de que venza.
+
+        También si los módulos Pro de esta versión están cifrados con una llave
+        nueva que la licencia instalada todavía no trae.
+        """
+        nueva = licencia.renovar(
+            self._ajustes.dir_datos / "licencia.txt",
+            licencia.hoy(),
+            llaves_viejas=self._pro.faltan_llaves,
+        )
         if nueva is None:
             return
-        self._pro.cargar(nueva.llave_pro)
+        self._pro.cargar(nueva.llaves_pro)
         with self._sesiones() as db:
             servicios.registrar(
                 db, None, "licencia.renovar", nueva.cliente, {"vence": str(nueva.vence)}
             )
+            db.commit()
+
+    def buscar_actualizacion(self) -> None:
+        if self._actualizador is None or not self._actualizador.busca:
+            return
+        with self._sesiones() as db:
+            if not actualizacion.buscar_activado(db):
+                return
+        nueva = self._actualizador.buscar()
+        if nueva is not None:
+            log.info("hay una versión nueva de mufa: %s", nueva.version)
+
+    def tarea_pro_frecuente(self) -> None:
+        """Avisos al equipo de Pro: botones de Telegram y escalamiento."""
+        if not self._pro.cargados:
+            return
+        with self._sesiones() as db:
+            plan, _aviso = licencia.plan_vigente(
+                self._ajustes.dir_datos / "licencia.txt", licencia.hoy()
+            )
+            self._pro.tarea_frecuente(db, plan)
             db.commit()
 
     def enviar_alertas(self) -> None:

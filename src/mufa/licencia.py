@@ -10,6 +10,12 @@ Formato: base64url(json) + "." + base64url(firma).
 Las licencias mensuales (suscripción) vencen a los 35 días. Mientras la
 suscripción siga pagada, mufa trae sola la licencia nueva del sitio unos
 días antes de que venza: solo manda el identificador de la licencia.
+
+Las licencias Pro traen las llaves de los módulos cifrados (mufa.modulos_pro):
+"pro" es la primera llave y "llaves" las que se sumaron después, una por
+cada vez que se rotó. Si una versión nueva trae módulos cifrados con una
+llave que la licencia instalada no tiene, mufa pide al sitio la licencia
+actualizada sin esperar a que venza.
 """
 
 from __future__ import annotations
@@ -119,8 +125,8 @@ class Plan:
     vence: date | None
     # Identificador de la licencia: con él se trae la renovación de una suscripción.
     id: str = ""
-    # Llave que abre los módulos Pro cifrados (mufa.modulos_pro). Solo en planes de pago.
-    llave_pro: str = ""
+    # Llaves que abren los módulos Pro cifrados (mufa.modulos_pro). Solo en planes de pago.
+    llaves_pro: tuple[str, ...] = ()
 
     def admite_otro_equipo(self, registrados: int) -> bool:
         return self.max_equipos is None or registrados < self.max_equipos
@@ -189,8 +195,16 @@ def verificar(texto: str, hoy: date, clave_publica: bytes | None = None) -> Plan
         ),
         vence=vence,
         id=str(contenido.get("id") or ""),
-        llave_pro=str(contenido.get("pro") or ""),
+        llaves_pro=_llaves(contenido),
     )
+
+
+def _llaves(contenido: dict[str, object]) -> tuple[str, ...]:
+    # "pro" es la primera llave (la que leen las versiones 0.1.4 y anteriores).
+    primera = [contenido["pro"]] if contenido.get("pro") else []
+    otras = contenido.get("llaves")
+    todas = primera + (list(otras) if isinstance(otras, list) else [])
+    return tuple(dict.fromkeys(str(llave) for llave in todas if llave))
 
 
 def plan_vigente(archivo: Path, hoy: date) -> tuple[Plan, str]:
@@ -218,8 +232,13 @@ def renovar(
     hoy: date,
     obtener: Obtener = _obtener,
     clave_publica: bytes | None = None,
+    llaves_viejas: bool = False,
 ) -> Plan | None:
     """Trae la licencia nueva de una suscripción si la instalada está por vencer.
+
+    Con llaves_viejas=True (los módulos Pro de esta versión no abren con las
+    llaves de la licencia) la pide aunque falte mucho para que venza, y la
+    acepta si vence el mismo día pero trae llaves nuevas.
 
     Devuelve el plan nuevo si la reemplazó; None si no hacía falta o no hay
     una más nueva (la suscripción se canceló, o todavía no se cobró el mes).
@@ -234,7 +253,9 @@ def renovar(
         # Vencida: igual se intenta, por si el pago del mes llegó tarde.
         actual = None
     if actual is not None:
-        if actual.vence is None or actual.vence - hoy > timedelta(days=DIAS_ANTES_DE_RENOVAR):
+        if actual.vence is None:
+            return None
+        if not llaves_viejas and actual.vence - hoy > timedelta(days=DIAS_ANTES_DE_RENOVAR):
             return None
         identificador = actual.id
     else:
@@ -255,8 +276,10 @@ def renovar(
         return None
     if nueva.id != identificador or nueva.vence is None:
         return None
-    if actual is not None and actual.vence is not None and nueva.vence <= actual.vence:
-        return None
+    if actual is not None and actual.vence is not None:
+        llaves_nuevas = not set(nueva.llaves_pro) <= set(actual.llaves_pro)
+        if nueva.vence < actual.vence or (nueva.vence == actual.vence and not llaves_nuevas):
+            return None
     temporal = archivo.with_name(archivo.name + ".nueva")
     temporal.write_text(str(respuesta["licencia"]).strip(), encoding="utf-8")
     temporal.replace(archivo)

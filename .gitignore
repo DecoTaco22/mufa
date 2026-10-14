@@ -22,8 +22,15 @@ licencia.txt
 src/mufa/web/
 web/node_modules/
 
+# sitio: secretos locales y estado de wrangler
+sitio/.dev.vars
+sitio/.wrangler/
 
+# Notas internas (plan de lanzamiento, metas): no se publican
+notas-privadas/
 
 # Caché local de wrangler (Cloudflare): tiene datos de la cuenta
 .wrangler/
+
+# caché de TypeScript (la crea npm run build)
 *.tsbuildinfo

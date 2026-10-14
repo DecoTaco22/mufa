@@ -569,6 +569,34 @@ class LicenciaSalida(BaseModel):
     funciones: list[str]
 
 
+class VersionNueva(BaseModel):
+    version: str
+    publicada: date | None
+    notas: str
+
+
+class ActualizacionSalida(BaseModel):
+    version_actual: str
+    # instalador | macos | portatil | tienda | servidor | codigo
+    modo: str
+    # Busca una vez al día (se apaga en Ajustes).
+    buscar: bool
+    revisada: datetime | None
+    nueva: VersionNueva | None
+    # Se instala con un clic (Windows con instalador y Mac).
+    puede_instalar: bool
+    # "" | "descargando" | "instalando"
+    estado: str
+    error: str
+    # Para las que no se instalan solas: qué hacer.
+    pasos: str
+    url_versiones: str
+
+
+class ActualizacionAjustes(BaseModel):
+    buscar: bool
+
+
 class LicenciaInstalar(BaseModel):
     licencia: str = Field(min_length=10, max_length=4096)
 

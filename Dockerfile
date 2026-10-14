@@ -32,6 +32,7 @@ RUN useradd --create-home --uid 10001 mufa \
 COPY --from=construccion /app/.venv /app/.venv
 ENV PATH=/app/.venv/bin:$PATH \
     MUFA_DIR_DATOS=/datos \
+    MUFA_MODO=servidor \
     PYTHONUNBUFFERED=1
 USER mufa
 VOLUME /datos

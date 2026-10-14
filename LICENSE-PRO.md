@@ -6,7 +6,9 @@ Esta licencia se aplica al código de la carpeta `src/mufa/pro/` y a todo
 archivo que diga «mufa Pro» y «licencia comercial» en su encabezado. El
 resto del repositorio está bajo la [GNU AGPL v3](LICENSE).
 
-1. **Leer y auditar.** Puedes leer este código para revisar qué hace,
+1. **Leer y auditar.** En el repositorio público y en las descargas este
+   código va cifrado (`src/mufa/pro/modulos.cifrado`). Con una licencia
+   vigente tienes la llave para abrirlo y leerlo, para revisar qué hace,
    cómo trata tus datos y que es seguro para tu red.
 2. **Usar.** Usar estas funciones requiere una licencia de mufa Pro (o de
    un plan que las incluya) vigente, instalada en la instalación donde se

@@ -1,6 +1,6 @@
 [project]
 name = "mufa"
-version = "0.1.4"
+version = "0.1.5"
 description = "Herramientas de diagnóstico de solo lectura para operadores de internet pequeños."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,7 @@ dependencies = [
     "pysnmp>=7.1.30",
     "httpx>=0.28.1",
     "pyserial>=3.5",
+    "fpdf2>=2.8",
 ]
 
 [project.scripts]
@@ -67,5 +68,5 @@ strict = true
 
 # pysnmp y pyserial no publican tipos: lo que devuelven se trata como Any.
 [[tool.mypy.overrides]]
-module = ["pysnmp.*", "serial", "serial.*"]
+module = ["pysnmp.*", "pyasn1.*", "serial", "serial.*"]
 ignore_missing_imports = true

@@ -142,16 +142,12 @@ def _destino_salida(destino: copias.Destino) -> DestinoSalida:
 
 def _estado_de_equipos(db: DB) -> list[EquipoEnRespaldos]:
     versiones = dict(
-        db.execute(select(Respaldo.equipo_id, func.count()).group_by(Respaldo.equipo_id))
-        .tuples()
-        .all()
+        db.execute(select(Respaldo.equipo_id, func.count()).group_by(Respaldo.equipo_id)).all()
     )
     ultimos = dict(
         db.execute(
             select(Respaldo.equipo_id, func.max(Respaldo.confirmado)).group_by(Respaldo.equipo_id)
-        )
-        .tuples()
-        .all()
+        ).all()
     )
     # El último resultado de cada equipo (por nombre, como queda en el registro).
     resultados: dict[str, Evento] = {}
