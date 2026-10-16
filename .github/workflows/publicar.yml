@@ -24,7 +24,7 @@ jobs:
           node-version: 24
       - run: npm ci --no-fund && npm run build
         working-directory: web
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: web
           path: src/mufa/web
@@ -100,7 +100,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit 1 }
       - name: Guardar el paquete de la tienda (se sube a mano en Partner Center)
         if: matrix.nombre == 'windows'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mufa-tienda
           path: mufa-tienda.msix
@@ -127,7 +127,7 @@ jobs:
             test "$(defaults read /tmp/mufa-dmg/mufa.app/Contents/Info.plist CFBundleShortVersionString)" = "$VERSION"
             hdiutil detach /tmp/mufa-dmg
           fi
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mufa-${{ matrix.nombre }}
           path: |
@@ -165,7 +165,7 @@ jobs:
           sed -i "s|PROPIETARIO/mufa|${GITHUB_REPOSITORY}|" mufa-servidor/LEEME.txt
           chmod +x mufa-servidor/instalar.sh
           zip -qr mufa-servidor.zip mufa-servidor
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mufa-servidor
           path: mufa-servidor.zip
