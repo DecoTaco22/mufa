@@ -23,7 +23,9 @@ def test_programador_inactivo_si_los_intervalos_son_cero(ajustes: Ajustes) -> No
 
 def test_sondear_y_respaldar_todos(cliente: TestClient, admin: dict[str, str]) -> None:
     agente = AgenteSNMPFalso()
-    router = ServidorSSHFalso(lambda c: "/system identity\nset name=r1\n" if c == "/export" else "")
+    router = ServidorSSHFalso(
+        lambda c: "/system identity\nset name=r1\n" if c.startswith("/export") else ""
+    )
     try:
         con_snmp = {
             "nombre": "Con SNMP",

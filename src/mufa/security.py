@@ -43,6 +43,8 @@ ALLOWED_COMMANDS: dict[str, frozenset[str]] = {
     "mikrotik": frozenset(
         {
             "/export",
+            # El export con contraseñas y claves: el respaldo que sirve para restaurar.
+            "/export show-sensitive",
             "/ip dns export",
             "/ip firewall filter export",
             "/ip service export verbose",
@@ -52,16 +54,27 @@ ALLOWED_COMMANDS: dict[str, frozenset[str]] = {
             "/system logging export verbose",
         }
     ),
-    "cisco": frozenset({"show running-config"}),
+    "cisco": frozenset({"show running-config", "terminal length 0"}),
     # Marcas que por ahora solo se respaldan (mufa.marcas.otras).
-    "huawei": frozenset({"display current-configuration"}),
+    "huawei": frozenset({"display current-configuration", "screen-length 0 temporary"}),
     "juniper": frozenset({"show configuration"}),
-    "hpe": frozenset({"display current-configuration", "show running-config"}),
+    "hpe": frozenset({"display current-configuration", "show running-config", "no page"}),
     "ubiquiti": frozenset(
         {"cat /config/config.boot", "cat /tmp/system.cfg", "show running-config"}
     ),
     "nokia": frozenset({"admin display-config", "admin show configuration"}),
-    "zte": frozenset({"show running-config"}),
+    "zte": frozenset({"show running-config", "terminal length 0"}),
+}
+
+# Por consola, antes de pedir la configuración: quita la paginación («---- More ----»)
+# solo en esta sesión. No toca la configuración del equipo y se pierde al salir. Una
+# configuración de miles de líneas, página por página, tarda minutos. (HPE Comware usa
+# «screen-length disable», que choca con el verbo «disable»: ahí se sigue paginando.)
+PAGINACION: dict[str, str] = {
+    "cisco": "terminal length 0",
+    "huawei": "screen-length 0 temporary",
+    "hpe": "no page",
+    "zte": "terminal length 0",
 }
 
 

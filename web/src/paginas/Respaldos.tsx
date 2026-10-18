@@ -33,7 +33,7 @@ interface EquipoRespaldo {
 }
 
 interface Resumen {
-  programa: { activo: boolean; hora: string };
+  programa: { activo: boolean; hora: string; secretos: boolean };
   proximo: string | null;
   hora_servidor: string;
   zona: string;
@@ -161,13 +161,15 @@ export function Respaldos() {
 function Horario({ resumen, editable, onGuardado }: { resumen: Resumen; editable: boolean; onGuardado: () => void }) {
   const [activo, setActivo] = useState(resumen.programa.activo);
   const [hora, setHora] = useState(resumen.programa.hora);
+  const [secretos, setSecretos] = useState(resumen.programa.secretos);
   const [error, setError] = useState<string | null>(null);
-  const cambiado = activo !== resumen.programa.activo || hora !== resumen.programa.hora;
+  const cambiado =
+    activo !== resumen.programa.activo || hora !== resumen.programa.hora || secretos !== resumen.programa.secretos;
 
   async function guardar() {
     setError(null);
     try {
-      await api("/respaldos/programa", { metodo: "PUT", cuerpo: { activo, hora } });
+      await api("/respaldos/programa", { metodo: "PUT", cuerpo: { activo, hora, secretos } });
       onGuardado();
     } catch (e) {
       setError(textoDeError(e));
@@ -199,10 +201,14 @@ function Horario({ resumen, editable, onGuardado }: { resumen: Resumen; editable
         {resumen.proximo ? `Próximo: ${fecha(resumen.proximo)}. ` : ""}
         Hora del servidor: {servidor}{resumen.zona ? ` (${resumen.zona})` : ""}. Si estaba apagado a esa hora, respalda apenas arranca.
       </div>
+      <label className="casilla" title="En MikroTik: /export show-sensitive. Los respaldos se guardan cifrados.">
+        <input type="checkbox" checked={secretos} disabled={!editable} onChange={(e) => setSecretos(e.target.checked)} /> Incluir
+        contraseñas y claves (secretos PPPoE, VPN, wifi), para poder restaurar el equipo tal cual
+      </label>
       {error && <div className="aviso error">{error}</div>}
       {editable && cambiado && (
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <button className="boton chico" onClick={() => { setActivo(resumen.programa.activo); setHora(resumen.programa.hora); }}>Deshacer</button>
+          <button className="boton chico" onClick={() => { setActivo(resumen.programa.activo); setHora(resumen.programa.hora); setSecretos(resumen.programa.secretos); }}>Deshacer</button>
           <button className="boton chico primario" onClick={() => void guardar()}>Guardar horario</button>
         </div>
       )}

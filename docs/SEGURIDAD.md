@@ -68,6 +68,10 @@ la licencia se verifica sin internet.
 - **Lista blanca de comandos por marca:** el diagnóstico solo puede
   ejecutar comandos de lectura aprobados. Se verifica en tiempo de
   ejecución y con un test que recorre el código.
+- **Paginación solo de la sesión:** por consola (Huawei, ZTE, HPE ProCurve,
+  Cisco), antes de pedir la configuración mufa manda `screen-length 0
+  temporary`, `terminal length 0` o `no page`. Solo afectan a esa sesión de
+  terminal, no cambian la configuración del equipo y están en la lista blanca.
 
 - **SHA-1 apagado por defecto** (CVE-2026-44405 / GHSA-r374-rxx8-8654):
   mufa usa paramiko 4 porque la 5 quitó por completo los algoritmos que
@@ -114,8 +118,14 @@ teclea: mufa no agrega ni ejecuta nada por su cuenta.
 - Los respaldos de configuración se guardan cifrados: pueden incluir
   secretos del equipo. Su contenido solo lo ven los roles que pueden usar
   credenciales, y cada lectura queda en el registro de eventos.
-- El respaldo de MikroTik usa `/export` sin `show-sensitive`: RouterOS no
-  incluye contraseñas.
+- Por defecto el respaldo de MikroTik usa `/export show-sensitive`: incluye
+  contraseñas y claves (secretos PPPoE, VPN, wifi), porque sin ellas no se
+  puede restaurar el equipo. Se apaga en Respaldos (entonces usa `/export`,
+  que en RouterOS 7 no las incluye). Las copias por FTP simple viajan sin
+  cifrar: con secretos, usar SFTP.
+- Un respaldo que llega cortado (Cisco sin `end`, Huawei sin `return`,
+  Junos con llaves sin cerrar, o una consola que deja de responder) no se
+  guarda: se registra el error y queda el respaldo anterior.
 
 ### Control de acceso
 - Cada ruta de la API pide un **permiso** concreto, y cada rol tiene un

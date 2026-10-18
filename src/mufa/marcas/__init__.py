@@ -52,6 +52,21 @@ def respaldador(marca: str) -> Respaldador:
         raise MarcaNoSoportada(f"todavía no se sabe respaldar la marca {marca!r}") from None
 
 
+# Cómo termina la configuración completa de cada marca. Si falta, el respaldo se cortó.
+_FINAL = {"cisco": "end", "huawei": "return"}
+
+
+def falta_en_respaldo(marca: str, texto: str) -> str | None:
+    """Por qué el respaldo parece cortado, o None si está entero (o no se puede saber)."""
+    lineas = [linea.strip() for linea in texto.replace("\r", "").split("\n") if linea.strip()]
+    final = _FINAL.get(marca)
+    if final and (not lineas or lineas[-1] != final):
+        return f"falta el «{final}» del final"
+    if marca == "juniper" and texto.count("{") != texto.count("}"):
+        return "las llaves de la configuración no cierran"
+    return None
+
+
 def contexto_desde_archivo(ruta: Path, marca: str = "mikrotik") -> Contexto:
     return obtener(marca).contexto_desde_texto(ruta.read_text(encoding="utf-8"))
 

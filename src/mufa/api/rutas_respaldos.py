@@ -193,7 +193,9 @@ def resumen(_: Lector, db: DB, estado: Estado) -> ResumenRespaldos:
     envio = copias.leer_ultimo_envio(db)
     automaticos = estado.ajustes.intervalo_respaldo_horas > 0
     return ResumenRespaldos(
-        programa=ProgramaRespaldos(activo=programa.activo, hora=programa.hora),
+        programa=ProgramaRespaldos(
+            activo=programa.activo, hora=programa.hora, secretos=programa.secretos
+        ),
         proximo=respaldos.proximo_respaldo(db, momento) if automaticos else None,
         hora_servidor=momento,
         zona=momento.tzname() or "",
@@ -213,8 +215,16 @@ def resumen(_: Lector, db: DB, estado: Estado) -> ResumenRespaldos:
 
 @router.put("/respaldos/programa")
 def cambiar_programa(datos: ProgramaRespaldos, usuario: Ingeniero, db: DB) -> ProgramaRespaldos:
-    respaldos.guardar_programa(db, respaldos.Programa(activo=datos.activo, hora=datos.hora))
-    registrar(db, usuario, "respaldo.programa", datos.hora, {"activo": datos.activo})
+    respaldos.guardar_programa(
+        db, respaldos.Programa(activo=datos.activo, hora=datos.hora, secretos=datos.secretos)
+    )
+    registrar(
+        db,
+        usuario,
+        "respaldo.programa",
+        datos.hora,
+        {"activo": datos.activo, "secretos": datos.secretos},
+    )
     return datos
 
 

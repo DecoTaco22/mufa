@@ -76,6 +76,125 @@ class _Menu:
     por_nombre: bool = False  # "/ip service": "set telnet port=23 ..."
 
 
+def _unico(ruta: str) -> _Menu:
+    return _Menu(ruta, unico=True)
+
+
+def _por_nombre(ruta: str) -> _Menu:
+    return _Menu(ruta, por_nombre=True)
+
+
+# Los menús del respaldo por API, en el orden de un /export (RouterOS 6 y 7).
+_MENUS_RESPALDO: tuple[_Menu, ...] = (
+    _unico("/system identity"),
+    _unico("/system clock"),
+    _unico("/system note"),
+    _unico("/system ntp client"),
+    _Menu("/system ntp client servers"),
+    _unico("/system ntp server"),
+    _Menu("/interface bridge"),
+    _Menu("/interface bonding"),
+    _Menu("/interface eoip"),
+    _Menu("/interface gre"),
+    _Menu("/interface ipip"),
+    _Menu("/interface vxlan"),
+    _Menu("/interface wireguard"),
+    _Menu("/interface wireguard peers"),
+    _Menu("/interface pppoe-client"),
+    _Menu("/interface l2tp-client"),
+    _Menu("/interface sstp-client"),
+    _Menu("/interface ovpn-client"),
+    _Menu("/interface vlan"),
+    _Menu("/interface vrrp"),
+    _por_nombre("/interface ethernet"),
+    _Menu("/interface list"),
+    _Menu("/interface list member"),
+    _Menu("/interface bridge port"),
+    _Menu("/interface bridge vlan"),
+    _Menu("/interface wireless security-profiles"),
+    _Menu("/interface wifi security"),
+    _Menu("/interface wifi configuration"),
+    _Menu("/interface pppoe-server server"),
+    _unico("/interface l2tp-server server"),
+    _unico("/interface sstp-server server"),
+    _unico("/interface ovpn-server server"),
+    _Menu("/ip vrf"),
+    _Menu("/ip pool"),
+    _Menu("/ip address"),
+    _Menu("/ip dhcp-client"),
+    _Menu("/ip dhcp-server"),
+    _Menu("/ip dhcp-server network"),
+    _Menu("/ip dhcp-server lease"),
+    _unico("/ip dns"),
+    _Menu("/ip dns static"),
+    _Menu("/ip arp"),
+    _Menu("/ip firewall address-list"),
+    _Menu("/ip firewall filter"),
+    _Menu("/ip firewall nat"),
+    _Menu("/ip firewall mangle"),
+    _Menu("/ip firewall raw"),
+    _por_nombre("/ip firewall service-port"),
+    _Menu("/ip hotspot profile"),
+    _Menu("/ip hotspot"),
+    _Menu("/ip hotspot user profile"),
+    _Menu("/ip ipsec profile"),
+    _Menu("/ip ipsec peer"),
+    _Menu("/ip ipsec proposal"),
+    _Menu("/ip ipsec identity"),
+    _Menu("/ip ipsec policy"),
+    _unico("/ip neighbor discovery-settings"),
+    _unico("/ip settings"),
+    _Menu("/ip route"),
+    _Menu("/ip route rule"),
+    _por_nombre("/ip service"),
+    _Menu("/ipv6 address"),
+    _Menu("/ipv6 route"),
+    _Menu("/ipv6 pool"),
+    _Menu("/ipv6 dhcp-client"),
+    _Menu("/ipv6 nd"),
+    _unico("/ipv6 settings"),
+    _Menu("/ipv6 firewall address-list"),
+    _Menu("/ipv6 firewall filter"),
+    _Menu("/ipv6 firewall mangle"),
+    _Menu("/ppp profile"),
+    _Menu("/ppp secret"),
+    _unico("/ppp aaa"),
+    _Menu("/radius"),
+    _unico("/radius incoming"),
+    _Menu("/queue type"),
+    _Menu("/queue simple"),
+    _Menu("/queue tree"),
+    _Menu("/routing table"),
+    _Menu("/routing rule"),
+    _Menu("/routing filter rule"),
+    _Menu("/routing filter num-list"),
+    _Menu("/routing filter community-list"),
+    _Menu("/routing bgp template"),
+    _Menu("/routing bgp instance"),
+    _Menu("/routing bgp connection"),
+    _Menu("/routing ospf instance"),
+    _Menu("/routing ospf area"),
+    _Menu("/routing ospf interface-template"),
+    # RouterOS 6
+    _Menu("/routing filter"),
+    _Menu("/routing bgp peer"),
+    _Menu("/routing bgp network"),
+    _Menu("/routing bgp aggregate"),
+    _Menu("/routing ospf network"),
+    _Menu("/routing ospf interface"),
+    _unico("/snmp"),
+    _Menu("/snmp community"),
+    _Menu("/system logging action"),
+    _Menu("/system logging"),
+    _Menu("/system scheduler"),
+    _Menu("/system script"),
+    _Menu("/tool netwatch"),
+    _unico("/tool romon"),
+    _Menu("/user group"),
+    _unico("/user aaa"),
+)
+
+
 _CONSULTAS: dict[str, tuple[_Menu, ...]] = {
     "/ip dns export": (_Menu("/ip dns", unico=True),),
     "/ip firewall filter export": (_Menu("/ip firewall filter"),),
@@ -84,46 +203,16 @@ _CONSULTAS: dict[str, tuple[_Menu, ...]] = {
     "/interface vlan export": (_Menu("/interface vlan"),),
     "/system ntp client export verbose": (_Menu("/system ntp client", unico=True),),
     "/system logging export verbose": (_Menu("/system logging action"), _Menu("/system logging")),
-    # Respaldo: la API no tiene /export, así que se arma con la configuración
-    # de los menús más importantes.
-    "/export": (
-        _Menu("/system identity", unico=True),
-        _Menu("/system clock", unico=True),
-        _Menu("/system ntp client", unico=True),
-        _Menu("/interface"),
-        _Menu("/interface bridge"),
-        _Menu("/interface bridge port"),
-        _Menu("/interface vlan"),
-        _Menu("/interface bonding"),
-        _Menu("/interface list"),
-        _Menu("/interface list member"),
-        _Menu("/ip pool"),
-        _Menu("/ip address"),
-        _Menu("/ip route"),
-        _Menu("/ipv6 address"),
-        _Menu("/ip dhcp-server"),
-        _Menu("/ip dhcp-server network"),
-        _Menu("/ip dns", unico=True),
-        _Menu("/ip firewall address-list"),
-        _Menu("/ip firewall filter"),
-        _Menu("/ip firewall nat"),
-        _Menu("/ip firewall mangle"),
-        _Menu("/ip firewall raw"),
-        _Menu("/ipv6 firewall filter"),
-        _Menu("/ip service", por_nombre=True),
-        _Menu("/snmp", unico=True),
-        _Menu("/snmp community"),
-        _Menu("/ppp profile"),
-        _Menu("/queue simple"),
-        _Menu("/routing ospf instance"),
-        _Menu("/routing bgp connection"),
-        _Menu("/user group"),
-    ),
+    # Respaldo: la API no tiene /export, así que se arma leyendo los menús de la
+    # configuración. Los que no existen en esa versión de RouterOS se saltan.
+    "/export": _MENUS_RESPALDO,
+    "/export show-sensitive": _MENUS_RESPALDO,
 }
 
 _CABECERA_RESPALDO = (
     "# Generado por mufa con la API de RouterOS (el equipo no permite SSH).\n"
-    "# Incluye los menús principales; no es un /export completo ni sirve para restaurar tal cual."
+    "# La API no tiene /export: se leyeron uno por uno los menús de la configuración.\n"
+    "# Para un /export completo, igual al del equipo, habilita SSH para el usuario de mufa."
 )
 
 # Estado y contadores: cambian solos y no son configuración.
@@ -133,7 +222,7 @@ _VOLATIL = re.compile(
     r"|^creation-time$|^immediate-gw$|^gateway-status$|^hw-offloaded$|^time$|^date$"
     r"|^dst-mac-address$|^dhcp$|^ecmp$|^connect$|^static$|^builtin$|^default-name$"
 )
-# Secretos: no se guardan, igual que un export sin show-sensitive.
+# Secretos: solo se guardan con "/export show-sensitive" (como en un export de verdad).
 _SECRETO = re.compile(r"password|secret|passphrase|(^|-)key$")
 
 
@@ -144,10 +233,10 @@ def _valor_rsc(valor: str) -> str:
     return '"' + valor.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def _propiedades(atributos: dict[str, str], menu: _Menu) -> str:
+def _propiedades(atributos: dict[str, str], menu: _Menu, secretos: bool = False) -> str:
     pares = []
     for clave in sorted(atributos):
-        if _VOLATIL.search(clave) or _SECRETO.search(clave):
+        if _VOLATIL.search(clave) or (_SECRETO.search(clave) and not secretos):
             continue
         if menu.por_nombre and clave == "name":
             continue
@@ -155,12 +244,12 @@ def _propiedades(atributos: dict[str, str], menu: _Menu) -> str:
     return " ".join(pares)
 
 
-def a_rsc(menu: _Menu, objetos: list[dict[str, str]]) -> str:
+def a_rsc(menu: _Menu, objetos: list[dict[str, str]], secretos: bool = False) -> str:
     lineas = [menu.ruta]
     for objeto in objetos:
         if objeto.get("dynamic") == "true":
             continue
-        props = _propiedades(objeto, menu)
+        props = _propiedades(objeto, menu, secretos)
         if menu.unico:
             lineas.append(f"set {props}")
         elif menu.por_nombre:
@@ -352,9 +441,10 @@ class SesionApiRouterOS:
     def run_readonly(self, command: str) -> str:
         """Ejecuta un export de la lista blanca, traducido a consultas print de la API."""
         assert_allowed(command, "mikrotik")
-        partes = [_CABECERA_RESPALDO] if command == "/export" else []
+        partes = [_CABECERA_RESPALDO] if command.startswith("/export") else []
+        secretos = command == "/export show-sensitive"
         for menu in _CONSULTAS[command]:
             objetos = self.imprimir(menu.ruta)
-            if objetos is not None:
-                partes.append(a_rsc(menu, objetos))
+            if objetos:
+                partes.append(a_rsc(menu, objetos, secretos))
         return "\n".join(partes) + "\n"

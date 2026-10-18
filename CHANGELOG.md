@@ -1,5 +1,24 @@
 # Cambios
 
+## v0.1.6
+
+- **Respaldos completos:** en MikroTik el respaldo incluye contraseñas y
+  claves (`/export show-sensitive`; en RouterOS 6 el export ya las trae), así
+  sirve para restaurar el equipo tal cual. Se puede apagar en Respaldos.
+- **Configuraciones grandes:** mufa espera hasta 10 minutos a que el equipo
+  mande la configuración (mucho BGP o listas de miles de direcciones tardan
+  en empezar). Por consola quita la paginación solo de esa sesión, así una
+  configuración de miles de líneas llega de una vez.
+- **Nunca un respaldo cortado:** si la configuración llega incompleta (Cisco
+  sin `end`, Huawei sin `return`, o la consola deja de responder) no se
+  guarda, se avisa y queda el respaldo anterior. El error dice qué pasó en
+  vez de «el puerto no responde».
+- **MikroTik por API:** el respaldo lee más de 100 menús (BGP completo de
+  RouterOS 6 y 7, filtros de rutas, OSPF, PPP, túneles, colas, IPsec,
+  scripts...). Para un `/export` idéntico al del equipo, se recomienda SSH.
+- **Microsoft Store:** si los datos los dejó una versión más nueva de mufa,
+  la app lo explica y dice cómo actualizar, en vez de no arrancar.
+
 ## v0.1.5
 
 - **Actualizaciones:** mufa avisa cuando sale una versión nueva. En Windows

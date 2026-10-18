@@ -104,7 +104,7 @@ def test_marca_sin_soporte_y_sin_usuario_en_el_resumen(
     resumen = cliente.get(f"{API}/respaldos", headers=admin).json()
     estados = {e["nombre"]: e["estado"] for e in resumen["equipos"]}
     assert estados == {"Caja negra": "sin_soporte", "Juniper sin usuario": "sin_acceso"}
-    assert resumen["programa"] == {"activo": True, "hora": "12:00"}
+    assert resumen["programa"] == {"activo": True, "hora": "12:00", "secretos": True}
 
 
 # --- Equipos que solo hablan por consola, con paginación ---------------------------
@@ -138,6 +138,14 @@ class _ConsolaHuawei(paramiko.ServerInterface):
 
     def _consola(self, canal: paramiko.Channel) -> None:
         canal.sendall(b"\r\nInfo: The max number of VTY users is 10.\r\n<CORE-HW>")
+        recibido = b""
+        while b"\n" not in recibido:
+            recibido += canal.recv(100)
+        # Primero apaga la paginación de esta sesión (no toca la configuración).
+        assert recibido.strip() == b"screen-length 0 temporary"
+        canal.sendall(
+            b"screen-length 0 temporary\r\nInfo: The configuration takes effect on the current user terminal interface only.\r\n<CORE-HW>"
+        )
         recibido = b""
         while b"\n" not in recibido:
             recibido += canal.recv(100)
@@ -232,7 +240,9 @@ def servidor_ftp(tmp_path: Path):  # type: ignore[no-untyped-def]
 
 
 def _respaldar_un_mikrotik(cliente: TestClient, admin: dict[str, str]) -> ServidorSSHFalso:
-    router = ServidorSSHFalso(lambda c: "/system identity\nset name=r1\n" if c == "/export" else "")
+    router = ServidorSSHFalso(
+        lambda c: "/system identity\nset name=r1\n" if c.startswith("/export") else ""
+    )
     equipo = {
         "nombre": "RT Centro/1",  # la barra no puede crear carpetas en el servidor
         "marca": "mikrotik",

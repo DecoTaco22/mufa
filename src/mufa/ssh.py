@@ -10,7 +10,7 @@ from typing import Protocol, Self
 
 import paramiko
 
-from mufa.security import assert_allowed
+from mufa.security import PAGINACION, assert_allowed
 
 # Claves de host conocidas, propias de mufa. La primera conexión a un router
 # guarda su clave (trust on first use); si en una conexión posterior la clave
@@ -100,6 +100,7 @@ class SesionSoloLectura:
         port: int = 22,
         timeout: float = 10.0,
         known_hosts: Path = KNOWN_HOSTS,
+        timeout_lectura: float | None = None,
     ) -> None:
         self._host = host
         self._marca = marca
@@ -107,6 +108,9 @@ class SesionSoloLectura:
         self._password = password
         self._port = port
         self._timeout = timeout
+        # Cuánto puede tardar el equipo en mandar una respuesta: un export grande (mucho
+        # BGP, listas de direcciones) puede demorar minutos en empezar.
+        self._lectura = timeout_lectura or timeout
         self._known_hosts = known_hosts
         self._client = paramiko.SSHClient()
 
@@ -150,9 +154,15 @@ class SesionSoloLectura:
         """Ejecuta un comando de la lista blanca y devuelve la salida."""
         assert_allowed(command, self._marca)
         try:
-            _, stdout, stderr = self._client.exec_command(command, timeout=self._timeout)
+            _, stdout, stderr = self._client.exec_command(command, timeout=self._lectura)
             salida: str = stdout.read().decode("utf-8", errors="replace")
             error: str = stderr.read().decode("utf-8", errors="replace")
+        except TimeoutError:
+            # La conexión estaba bien: el equipo no terminó de responder a tiempo.
+            raise RuntimeError(
+                f"el equipo no terminó de mandar la respuesta de «{command}» en "
+                f"{self._lectura:.0f} s; con configuraciones muy grandes puede tardar más"
+            ) from None
         except paramiko.SSHException:
             # OLTs ZTE, HPE ProCurve y algunos VRP no aceptan comandos sueltos: por consola.
             return self._por_consola(command)
@@ -176,14 +186,28 @@ class SesionSoloLectura:
         assert_allowed(command, self._marca)
         canal = self._client.invoke_shell(width=511, height=1000)
         canal.settimeout(0.3)
-        limite = time.monotonic() + max(self._timeout, 30) * 4
+        limite = time.monotonic() + max(self._lectura, 30) * 4
+        silencio = max(_SIN_RESPUESTA, self._lectura / 5)
         try:
-            bienvenida = limpiar_consola(self._leer(canal, limite, prompt=None))
+            bienvenida, _ = self._leer(canal, limite, None, silencio)
+            bienvenida = limpiar_consola(bienvenida)
             prompt = next((x.strip() for x in reversed(bienvenida.split("\n")) if x.strip()), "")
+            if paginacion := PAGINACION.get(self._marca):
+                # Solo esta sesión: así la configuración llega de una vez y no página a página.
+                assert_allowed(paginacion, self._marca)
+                canal.send((paginacion + "\n").encode())
+                self._leer(canal, limite, prompt, silencio)
             canal.send((command + "\n").encode())
-            lineas = limpiar_consola(self._leer(canal, limite, prompt)).split("\n")
+            respuesta, completa = self._leer(canal, limite, prompt, silencio)
+            lineas = limpiar_consola(respuesta).split("\n")
         finally:
             canal.close()
+        if not completa:
+            # Mejor un error que un respaldo cortado que parece bueno.
+            raise RuntimeError(
+                f"la respuesta de «{command}» llegó incompleta: el equipo dejó de mandar "
+                "datos antes de terminar"
+            )
         # Fuera el eco del comando (y lo anterior) y el prompt del final.
         for i, linea in enumerate(lineas[:5]):
             if command in linea:
@@ -194,8 +218,14 @@ class SesionSoloLectura:
         return "\n".join(lineas)
 
     @staticmethod
-    def _leer(canal: paramiko.Channel, limite: float, prompt: str | None) -> str:
-        """Lee hasta que el equipo se calla; con `prompt`, hasta que lo vuelve a mostrar."""
+    def _leer(
+        canal: paramiko.Channel, limite: float, prompt: str | None, silencio: float = _SIN_RESPUESTA
+    ) -> tuple[str, bool]:
+        """Lee hasta que el equipo se calla; con `prompt`, hasta que lo vuelve a mostrar.
+
+        Devuelve (texto, completo): completo es False si se cortó por tiempo antes de
+        ver el prompt de nuevo.
+        """
         datos = ""
         atendido = 0  # hasta dónde ya se respondió una pausa
         ultimo = time.monotonic()
@@ -215,10 +245,16 @@ class SesionSoloLectura:
             if trozo == b"":
                 break  # el equipo cerró la consola
             quieto = ahora - ultimo
-            cola = limpiar_consola(datos[-200:]).rstrip("\n").rsplit("\n", 1)[-1].strip()
-            listo = prompt is None or (cola == prompt if prompt else bool(_PROMPT.search(cola)))
-            if datos and quieto >= _CALMA and listo:
+            if datos and quieto >= _CALMA and _listo(datos, prompt):
+                return datos, True
+            if quieto >= (silencio if datos or prompt is not None else _CALMA * 3):
                 break
-            if quieto >= (_SIN_RESPUESTA if datos or prompt is not None else _CALMA * 3):
-                break
-        return datos
+        return datos, _listo(datos, prompt)
+
+
+def _listo(datos: str, prompt: str | None) -> bool:
+    """¿Lo último que mandó el equipo es su prompt (terminó de responder)?"""
+    if prompt is None:
+        return True
+    cola = limpiar_consola(datos[-200:]).rstrip("\n").rsplit("\n", 1)[-1].strip()
+    return cola == prompt if prompt else bool(_PROMPT.search(cola))

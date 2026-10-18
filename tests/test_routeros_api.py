@@ -78,6 +78,11 @@ def test_respaldo_por_api_sin_secretos_ni_contadores(
     cliente: TestClient, admin: dict[str, str], router: ApiRouterOSFalsa
 ) -> None:
     equipo_id = _crear(cliente, admin, router.puerto)
+    sin_secretos = {"activo": True, "hora": "12:00", "secretos": False}
+    assert (
+        cliente.put(f"{API}/respaldos/programa", json=sin_secretos, headers=admin).status_code
+        == 200
+    )
     primero = cliente.post(f"{API}/equipos/{equipo_id}/respaldar", headers=admin).json()
     texto = cliente.get(f"{API}/respaldos/{primero['respaldo']['id']}", headers=admin).json()[
         "contenido"
@@ -92,6 +97,16 @@ def test_respaldo_por_api_sin_secretos_ni_contadores(
     router.menus["/ip/firewall/filter/print"][0]["bytes"] = "999999"
     segundo = cliente.post(f"{API}/equipos/{equipo_id}/respaldar", headers=admin).json()
     assert segundo["cambio"] is False
+
+    # Con la opción de secretos (la de fábrica) sí van, para poder restaurar.
+    con_secretos = {**sin_secretos, "secretos": True}
+    cliente.put(f"{API}/respaldos/programa", json=con_secretos, headers=admin)
+    tercero = cliente.post(f"{API}/equipos/{equipo_id}/respaldar", headers=admin).json()
+    texto = cliente.get(f"{API}/respaldos/{tercero['respaldo']['id']}", headers=admin).json()[
+        "contenido"
+    ]
+    assert "no-debe-aparecer" in texto
+    assert "habilita SSH" in texto
 
 
 def test_contraseña_incorrecta(

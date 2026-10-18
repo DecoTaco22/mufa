@@ -17,6 +17,10 @@ from mufa.cifrado import Cifrador
 from mufa.db import AjusteSistema, Equipo, Respaldo, Usuario, ahora
 from mufa.servicios import ErrorDeConexion, conectar_y_leer, registrar
 
+# Una configuración grande (mucho BGP, listas de miles de direcciones) puede tardar
+# minutos en llegar. Para conectar sigue valiendo el tiempo corto.
+TIEMPO_DE_LECTURA = 600.0
+
 
 @dataclass
 class ResultadoRespaldo:
@@ -41,14 +45,25 @@ def respaldar_equipo(
     cifrador: Cifrador,
     known_hosts: Path,
     timeout: float = 30.0,
+    timeout_lectura: float = TIEMPO_DE_LECTURA,
 ) -> ResultadoRespaldo:
     """Saca la configuración y guarda una versión nueva solo si cambió.
 
-    Lanza ErrorDeConexion (ya registrado como evento) si no se pudo leer.
+    Lanza ErrorDeConexion (ya registrado como evento) si no se pudo leer, o si llegó
+    cortada: un respaldo incompleto nunca reemplaza al anterior.
     """
     adaptador = marcas.respaldador(equipo.marca)
+    lector = adaptador.leer_respaldo
+    con_secretos = getattr(adaptador, "leer_respaldo_con_secretos", None)
+    if con_secretos is not None and leer_programa(db).secretos:
+        lector = con_secretos
     try:
-        texto = conectar_y_leer(equipo, cifrador, known_hosts, timeout, adaptador.leer_respaldo)
+        texto = conectar_y_leer(equipo, cifrador, known_hosts, timeout, lector, timeout_lectura)
+        if motivo := marcas.falta_en_respaldo(equipo.marca, texto):
+            raise ErrorDeConexion(
+                f"la configuración llegó incompleta ({motivo}): no se guardó y se conserva "
+                "el respaldo anterior"
+            )
     except ErrorDeConexion as error:
         registrar(db, usuario, "respaldo.error", equipo.nombre, {"error": str(error)})
         raise
@@ -85,6 +100,9 @@ class Programa:
 
     activo: bool = True
     hora: str = "12:00"
+    # Contraseñas y claves en el respaldo (MikroTik: /export show-sensitive). Sin ellas
+    # no se puede restaurar el equipo tal cual. Los respaldos se guardan cifrados.
+    secretos: bool = True
 
     @property
     def hora_del_dia(self) -> time:
@@ -114,7 +132,11 @@ def leer_programa(db: Session) -> Programa:
     if not valor:
         return Programa()
     datos = json.loads(valor)
-    return Programa(activo=bool(datos.get("activo", True)), hora=str(datos.get("hora", "12:00")))
+    return Programa(
+        activo=bool(datos.get("activo", True)),
+        hora=str(datos.get("hora", "12:00")),
+        secretos=bool(datos.get("secretos", True)),
+    )
 
 
 def guardar_programa(db: Session, programa: Programa) -> None:

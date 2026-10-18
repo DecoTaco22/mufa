@@ -206,6 +206,18 @@ class MikroTik(Adaptador):
         # Sin show-sensitive: RouterOS 7 no incluye contraseñas en el export.
         return sesion.run_readonly("/export")
 
+    def leer_respaldo_con_secretos(self, sesion: SesionDeLectura) -> str:
+        """El export completo, con contraseñas y claves: el que sirve para restaurar.
+
+        RouterOS 7 los oculta salvo con show-sensitive. RouterOS 6 no conoce ese
+        parámetro (y ya los incluye en el export normal): ahí se usa /export.
+        """
+        texto = sesion.run_readonly("/export show-sensitive")
+        primeras = texto.lstrip()[:200].lower()
+        if "expected end of command" in primeras or "syntax error" in primeras:
+            return sesion.run_readonly("/export")
+        return texto
+
     def normalizar_respaldo(self, texto: str) -> str:
         lineas = super().normalizar_respaldo(texto).split("\n")
         return "\n".join(linea for linea in lineas if not _CABECERA_CON_FECHA.match(linea))

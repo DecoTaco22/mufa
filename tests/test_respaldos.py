@@ -33,7 +33,7 @@ class RouterConConfig:
         self.servidor = ServidorSSHFalso(self._responder)
 
     def _responder(self, comando: str) -> str:
-        return self.config if comando == "/export" else ""
+        return self.config if comando.startswith("/export") else ""
 
 
 @pytest.fixture
@@ -71,7 +71,8 @@ def test_respaldo_versiones_y_diferencias(
 
     primero = cliente.post(f"{API}/equipos/{equipo_id}/respaldar", headers=admin).json()
     assert primero["cambio"] is True
-    assert router.servidor.comandos == ["/export"]
+    # Con contraseñas y claves: el respaldo sirve para restaurar el equipo.
+    assert router.servidor.comandos == ["/export show-sensitive"]
 
     # Mismo contenido, otra fecha en la cabecera: no se duplica.
     router.config = CONFIG.replace("2026-10-05 02:00:00", "2026-10-06 02:00:00")

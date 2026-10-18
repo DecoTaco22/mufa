@@ -295,6 +295,8 @@ class Diferencias(BaseModel):
 class ProgramaRespaldos(BaseModel):
     activo: bool = True
     hora: str = Field(default="12:00", pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    # Incluir contraseñas y claves (MikroTik show-sensitive): el respaldo sirve para restaurar.
+    secretos: bool = True
 
 
 class DestinoEntrada(BaseModel):

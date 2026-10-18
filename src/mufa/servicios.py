@@ -115,7 +115,11 @@ class ErrorDeConexion(Exception):
 
 
 def _sesion(
-    equipo: Equipo, password: str | None, known_hosts: Path, timeout: float
+    equipo: Equipo,
+    password: str | None,
+    known_hosts: Path,
+    timeout: float,
+    timeout_lectura: float | None = None,
 ) -> AbstractContextManager[SesionDeLectura]:
     if equipo.acceso in ("api", "api-ssl"):
         return SesionApiRouterOS(
@@ -124,7 +128,7 @@ def _sesion(
             password=password,
             port=equipo.puerto_ssh,
             tls=equipo.acceso == "api-ssl",
-            timeout=timeout,
+            timeout=timeout_lectura or timeout,
             certificados=known_hosts.with_name(known_hosts.name + "_api"),
         )
     return SesionSoloLectura(
@@ -135,6 +139,7 @@ def _sesion(
         port=equipo.puerto_ssh,
         timeout=timeout,
         known_hosts=known_hosts,
+        timeout_lectura=timeout_lectura,
     )
 
 
@@ -144,11 +149,12 @@ def conectar_y_leer(
     known_hosts: Path,
     timeout: float,
     lector: Callable[[SesionDeLectura], T],
+    timeout_lectura: float | None = None,
 ) -> T:
     """Abre una sesión de solo lectura (SSH o API) con las credenciales del equipo y corre `lector`."""
     try:
         password = cifrador.descifrar(equipo.password_cifrada) if equipo.password_cifrada else None
-        with _sesion(equipo, password, known_hosts, timeout) as sesion:
+        with _sesion(equipo, password, known_hosts, timeout, timeout_lectura) as sesion:
             return lector(sesion)
     except paramiko.BadHostKeyException:
         raise ErrorDeConexion(
