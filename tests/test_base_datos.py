@@ -65,3 +65,19 @@ def test_migracion_0002_conserva_usuarios_existentes(tmp_path: Path) -> None:
         usuarios = conexion.execute(text("SELECT usuario FROM usuarios ORDER BY id")).scalars()
         assert list(usuarios) == ["ana", "ana2"]
     motor.dispose()
+
+
+def test_una_base_de_una_version_mas_nueva_da_un_error_claro(tmp_path: Path) -> None:
+    # La tienda puede ir una versión atrás del instalador, y las dos usan ~/.mufa.
+    from sqlalchemy import text
+
+    from mufa.migraciones import BaseMasNueva
+
+    url = f"sqlite:///{(tmp_path / 'm.db').as_posix()}"
+    actualizar_base(url)
+    motor = crear_motor(url)
+    with motor.begin() as conexion:
+        conexion.execute(text("UPDATE alembic_version SET version_num = '9999'"))
+    motor.dispose()
+    with pytest.raises(BaseMasNueva, match="versión más nueva"):
+        actualizar_base(url)

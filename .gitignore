@@ -34,3 +34,6 @@ notas-privadas/
 
 # caché de TypeScript (la crea npm run build)
 *.tsbuildinfo
+
+# Módulos Pro cifrados: solo van en el repositorio público (scripts/cifrar_pro.py)
+src/mufa/pro/modulos.cifrado
