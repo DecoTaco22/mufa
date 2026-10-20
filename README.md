@@ -12,6 +12,8 @@ solución lista para copiar y por qué importa.
 > completa para redes chicas, hasta 10 equipos.
 
 <p align="center">
+  <a href="https://apps.microsoft.com/detail/9PG9ZPWQ6G2Q"><b>Microsoft Store</b></a>
+  &nbsp;·&nbsp;
   <a href="https://github.com/DecoTaco22/mufa/releases/latest"><b>Descargar para Windows, Mac o servidor</b></a>
   &nbsp;·&nbsp;
   <a href="https://mufa.pages.dev">Sitio web</a>
@@ -89,6 +91,7 @@ Desde [Releases](https://github.com/DecoTaco22/mufa/releases/latest):
 
 | Descarga | Para qué | Cómo se usa |
 |---|---|---|
+| [**Microsoft Store**](https://apps.microsoft.com/detail/9PG9ZPWQ6G2Q) | Usarlo en tu PC (Windows 10 u 11) | **Lo recomendado:** se instala sin avisos de Windows y la tienda la mantiene al día |
 | `mufa-instalador-windows.exe` | Usarlo en tu PC (Windows 10 u 11) | Se instala como cualquier programa: menú Inicio y desinstalador |
 | `mufa-windows.zip` | Lo mismo, sin instalar (portátil) | Se descomprime y se abre `mufa.exe` |
 | `mufa-macos.dmg` | Usarlo en tu Mac (chip Apple M1 o posterior, macOS 12 o más nuevo) | Se arrastra a Aplicaciones, como cualquier app de Mac |
@@ -107,7 +110,8 @@ descarga.
    allá en **Ajustes › Llevar a otra computadora**: entras con tu mismo
    usuario, tus equipos y tus respaldos.
 
-Las apps todavía no están firmadas: Windows muestra "Windows protegió su PC"
+Desde la [Microsoft Store](https://apps.microsoft.com/detail/9PG9ZPWQ6G2Q) se instala sin avisos. El instalador
+`.exe` todavía no está firmado: Windows muestra "Windows protegió su PC"
 (elige **Más información › Ejecutar de todas formas**) y macOS la bloquea la
 primera vez (**Ajustes del Sistema › Privacidad y seguridad › Abrir
 igualmente**). Los datos quedan en la carpeta `.mufa` de tu usuario y mufa
