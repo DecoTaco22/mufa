@@ -112,10 +112,12 @@ export function PaginaPro() {
           <p className="tenue">{m.resumen}</p>
           <div className="fila">
             <a className="boton primario" href={`${SITIO}/pro`} target="_blank" rel="noreferrer">Obtener Pro</a>
+            {licencia?.plan === "gratis" && <Link className="boton" to="/ajustes#plan">Probar 14 días gratis</Link>}
             <Link className="boton" to="/planes">Ver planes</Link>
           </div>
           <span className="tenue" style={{ fontSize: 12 }}>
-            {Modulo ? "Ya disponible en Pro." : "En camino: con Pro lo recibes apenas sale."} La licencia se instala en Ajustes › Plan.
+            {Modulo ? "Ya disponible en Pro." : "En camino: con Pro lo recibes apenas sale."} El pago se hace en Ko-fi (PayPal o
+            tarjeta) y la licencia se instala en Ajustes › Plan.
           </span>
         </div>
         <div className="pro-vista" aria-hidden="true"><Vista /></div>

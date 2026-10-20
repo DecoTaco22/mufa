@@ -44,7 +44,8 @@ export function Planes() {
               <a className="boton primario" href={`${SITIO}/pro`} target="_blank" rel="noreferrer">Obtener Pro</a>
             </div>
             <span className="tenue" style={{ fontSize: 12 }}>
-              Los primeros 150 fundadores lo tienen a $15 al mes. La licencia te llega por correo y se instala en Ajustes › Plan.
+              Los primeros 150 fundadores lo tienen a $15 al mes. El pago se hace en Ko-fi (PayPal o tarjeta), en tu navegador; la
+              licencia te llega por correo y se instala en Ajustes › Plan.
             </span>
           </div>
         </Tarjeta>

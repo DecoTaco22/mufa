@@ -548,6 +548,12 @@ textarea {
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
+.prueba-pro {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--sel);
+}
 .logo-informe {
   padding: 12px;
   margin-bottom: 12px;

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
@@ -21,9 +22,10 @@ from mufa.api.esquemas import (
     LicenciaSalida,
     MarcaSalida,
     PrimerAdmin,
+    PruebaPedir,
     VersionNueva,
 )
-from mufa.db import Equipo, Evento, Usuario, ahora
+from mufa.db import AjusteSistema, Equipo, Evento, Usuario, ahora
 from mufa.permisos import Permiso, Rol
 from mufa.servicios import registrar
 
@@ -180,6 +182,7 @@ def _licencia(db: DB, estado: Estado) -> LicenciaSalida:
         vence=plan.vence,
         aviso=aviso,
         funciones=[f.value for f in plan.funciones],
+        prueba=plan.prueba,
     )
 
 
@@ -262,6 +265,38 @@ def instalar_actualizacion(admin: Admin, db: DB, estado: Estado) -> Actualizacio
         raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from None
     registrar(db, admin, "sistema.actualizar", nueva.version if nueva else "")
     return _actualizacion(db, estado)
+
+
+_INSTALACION = "instalacion.id"
+
+
+def _id_de_instalacion(db: DB) -> str:
+    """Un número al azar de esta instalación: la prueba gratis es una por instalación."""
+    fila = db.get(AjusteSistema, _INSTALACION)
+    if fila is None:
+        fila = AjusteSistema(clave=_INSTALACION, valor=secrets.token_hex(16))
+        db.add(fila)
+        db.flush()
+    return fila.valor
+
+
+@router.post("/licencia/prueba")
+def pedir_prueba(entrada: PruebaPedir, admin: Admin, db: DB, estado: Estado) -> LicenciaSalida:
+    """Pro gratis 14 días: el sitio emite la licencia y queda instalada como cualquier otra."""
+    plan_actual, _aviso = estado.plan()
+    if not plan_actual.es_gratis:
+        raise HTTPException(status.HTTP_409_CONFLICT, "ya tienes un plan instalado")
+    try:
+        texto, plan = licencia.pedir_prueba(
+            str(entrada.email), _id_de_instalacion(db), licencia.hoy()
+        )
+    except licencia.PruebaNoDisponible as error:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from None
+    estado.archivo_licencia.parent.mkdir(parents=True, exist_ok=True)
+    estado.archivo_licencia.write_text(texto, encoding="utf-8")
+    registrar(db, admin, "licencia.prueba", plan.cliente, {"vence": str(plan.vence)})
+    estado.pro.cargar(plan.llaves_pro)
+    return _licencia(db, estado)
 
 
 @router.get("/eventos")

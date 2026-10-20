@@ -1,5 +1,14 @@
 # Cambios
 
+## v0.1.7
+
+- **Prueba gratis de Pro por 14 días**, desde Ajustes › Plan o desde la
+  página de cada módulo Pro: sin tarjeta, una por instalación. Al terminar
+  vuelve al plan gratis sin perder datos.
+- La app dice quién cobra Pro: Ko-fi, con PayPal o tarjeta.
+- El sitio manda sola la licencia Pro por correo al cliente apenas paga
+  (cuando el correo está configurado).
+
 ## v0.1.6
 
 - **Respaldos completos:** en MikroTik el respaldo incluye contraseñas y

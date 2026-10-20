@@ -24,6 +24,7 @@ import base64
 import json
 import logging
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Callable
@@ -47,6 +48,8 @@ log = logging.getLogger("mufa.licencia")
 
 # De donde se trae la licencia nueva de una suscripción.
 URL_RENOVAR = os.environ.get("MUFA_URL_LICENCIAS", "https://mufa.pages.dev/api/licencia/renovar")
+# De donde se pide la prueba gratis de Pro (14 días, una por instalación y por correo).
+URL_PRUEBA = os.environ.get("MUFA_URL_PRUEBA", "https://mufa.pages.dev/api/prueba")
 # Se empieza a buscar la licencia nueva cuando faltan estos días.
 DIAS_ANTES_DE_RENOVAR = 10
 
@@ -127,6 +130,8 @@ class Plan:
     id: str = ""
     # Llaves que abren los módulos Pro cifrados (mufa.modulos_pro). Solo en planes de pago.
     llaves_pro: tuple[str, ...] = ()
+    # La prueba gratis de 14 días: Pro completo, sin renovación.
+    prueba: bool = False
 
     def admite_otro_equipo(self, registrados: int) -> bool:
         return self.max_equipos is None or registrados < self.max_equipos
@@ -196,6 +201,7 @@ def verificar(texto: str, hoy: date, clave_publica: bytes | None = None) -> Plan
         vence=vence,
         id=str(contenido.get("id") or ""),
         llaves_pro=_llaves(contenido),
+        prueba=bool(contenido.get("prueba", False)),
     )
 
 
@@ -284,3 +290,52 @@ def renovar(
     temporal.write_text(str(respuesta["licencia"]).strip(), encoding="utf-8")
     temporal.replace(archivo)
     return nueva
+
+
+class PruebaNoDisponible(Exception):
+    """El sitio no dio la prueba (ya se usó, correo inválido, sin conexión...)."""
+
+
+Pedir = Callable[[str, bytes], tuple[int, bytes]]
+
+
+def _pedir(url: str, cuerpo: bytes) -> tuple[int, bytes]:
+    pedido = urllib.request.Request(
+        url,
+        data=cuerpo,
+        headers={"User-Agent": "mufa", "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(pedido, timeout=20) as respuesta:
+            return respuesta.status, respuesta.read(64 * 1024)
+    except urllib.error.HTTPError as error:
+        return error.code, error.read(64 * 1024)
+
+
+def pedir_prueba(
+    email: str,
+    instalacion: str,
+    hoy: date,
+    pedir: Pedir | None = None,
+    clave_publica: bytes | None = None,
+) -> tuple[str, Plan]:
+    """Pide al sitio la licencia de prueba de Pro. Devuelve (texto, plan)."""
+    cuerpo = json.dumps({"email": email, "instalacion": instalacion}).encode()
+    try:
+        estado, datos = (pedir or _pedir)(URL_PRUEBA, cuerpo)
+    except OSError as error:
+        raise PruebaNoDisponible(f"no se pudo conectar con el sitio de mufa: {error}") from None
+    try:
+        respuesta = json.loads(datos)
+    except ValueError:
+        respuesta = {}
+    if estado != 200 or "licencia" not in respuesta:
+        motivo = respuesta.get("error") if isinstance(respuesta, dict) else None
+        raise PruebaNoDisponible(motivo or f"el sitio respondió {estado}")
+    texto = str(respuesta["licencia"]).strip()
+    try:
+        plan = verificar(texto, hoy, clave_publica)
+    except LicenciaInvalida as error:
+        raise PruebaNoDisponible(f"la licencia de prueba no es válida: {error}") from None
+    return texto, plan

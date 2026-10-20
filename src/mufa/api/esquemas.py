@@ -569,6 +569,12 @@ class LicenciaSalida(BaseModel):
     vence: date | None
     aviso: str
     funciones: list[str]
+    # La prueba gratis de 14 días.
+    prueba: bool = False
+
+
+class PruebaPedir(BaseModel):
+    email: EmailStr
 
 
 class VersionNueva(BaseModel):

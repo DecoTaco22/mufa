@@ -247,6 +247,7 @@ export interface Licencia {
   vence: string | null;
   aviso: string;
   funciones: string[];
+  prueba: boolean;
 }
 
 export type Acceso = "ssh" | "api" | "api-ssl";

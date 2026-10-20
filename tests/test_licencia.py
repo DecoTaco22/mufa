@@ -193,3 +193,77 @@ def test_con_llaves_viejas_no_cambia_por_la_misma_licencia(
     obtener, _ = _servidor({"abc123": actual})
     assert licencia.renovar(archivo, HOY, obtener, _publica(clave), llaves_viejas=True) is None
     assert archivo.read_text() == actual
+
+
+def _prueba(clave: Ed25519PrivateKey, email: str) -> str:
+    import base64
+
+    contenido = {
+        "id": "f00dfeed00000001",
+        "cliente": email,
+        "plan": "pro",
+        "max_equipos": None,
+        "emitida": "2026-10-05",
+        "vence": "2026-10-19",
+        "prueba": True,
+    }
+    datos = json.dumps(contenido, sort_keys=True).encode()
+
+    def b64(x: bytes) -> str:
+        return base64.urlsafe_b64encode(x).decode().rstrip("=")
+
+    return f"{b64(datos)}.{b64(clave.sign(datos))}"
+
+
+def test_la_prueba_gratis_se_pide_al_sitio(clave: Ed25519PrivateKey) -> None:
+    pedidos: list[dict[str, str]] = []
+
+    def sitio(url: str, cuerpo: bytes) -> tuple[int, bytes]:
+        pedidos.append(json.loads(cuerpo))
+        return 200, json.dumps({"licencia": _prueba(clave, "ana@isp.com")}).encode()
+
+    texto, plan = licencia.pedir_prueba("ana@isp.com", "a" * 32, HOY, sitio, _publica(clave))
+    assert pedidos == [{"email": "ana@isp.com", "instalacion": "a" * 32}]
+    assert plan.prueba and plan.nombre == "pro" and plan.vence == date(2026, 10, 19)
+    assert licencia.verificar(texto, HOY, _publica(clave)).prueba
+
+
+def test_la_prueba_ya_usada_explica_por_que(clave: Ed25519PrivateKey) -> None:
+    def usada(url: str, cuerpo: bytes) -> tuple[int, bytes]:
+        return 409, json.dumps({"error": "ya se usó la prueba gratis"}).encode()
+
+    def sin_red(url: str, cuerpo: bytes) -> tuple[int, bytes]:
+        raise OSError("sin conexión")
+
+    with pytest.raises(licencia.PruebaNoDisponible, match="ya se usó"):
+        licencia.pedir_prueba("ana@isp.com", "a" * 32, HOY, usada, _publica(clave))
+    with pytest.raises(licencia.PruebaNoDisponible, match="no se pudo conectar"):
+        licencia.pedir_prueba("ana@isp.com", "a" * 32, HOY, sin_red, _publica(clave))
+
+
+def test_la_prueba_por_la_api_instala_pro(
+    cliente: TestClient,
+    admin: dict[str, str],
+    clave: Ed25519PrivateKey,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(licencia, "CLAVE_PUBLICA_EMISOR", _publica(clave))
+    monkeypatch.setattr(licencia, "hoy", lambda: HOY)
+    instalaciones: list[str] = []
+
+    def sitio(url: str, cuerpo: bytes) -> tuple[int, bytes]:
+        instalaciones.append(json.loads(cuerpo)["instalacion"])
+        return 200, json.dumps({"licencia": _prueba(clave, "ana@isp.com")}).encode()
+
+    monkeypatch.setattr(licencia, "_pedir", sitio)
+    r = cliente.post("/api/v1/licencia/prueba", json={"email": "ana@isp.com"}, headers=admin)
+    assert r.status_code == 200, r.text
+    datos = r.json()
+    assert (datos["plan"], datos["prueba"], datos["max_equipos"]) == ("pro", True, None)
+    assert "informes" in datos["funciones"]
+    # La instalación tiene un número fijo, y con un plan instalado no se pide otra.
+    assert len(instalaciones[0]) == 32
+    otra = cliente.post("/api/v1/licencia/prueba", json={"email": "ana@isp.com"}, headers=admin)
+    assert otra.status_code == 409
+    mala = cliente.post("/api/v1/licencia/prueba", json={"email": "no-es-correo"}, headers=admin)
+    assert mala.status_code == 422

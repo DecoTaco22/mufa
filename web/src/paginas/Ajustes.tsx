@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import { TarjetaActualizacion } from "../componentes/Actualizacion";
 import { Campo, Encabezado, Formulario, Tarjeta } from "../componentes/ui";
@@ -154,17 +154,54 @@ function LicenciaYPlan() {
   const { usuario } = useSesion();
   const { datos, recargar } = useDatos<Licencia>("/licencia");
   const [texto, setTexto] = useState("");
+  const [correo, setCorreo] = useState(usuario?.email ?? "");
+  useEffect(() => {
+    if (datos && window.location.hash === "#plan") {
+      document.getElementById("plan")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [datos]);
   if (!datos) return null;
+  const admin = puede(usuario?.rol, "administrar_usuarios");
   return (
+    <div id="plan">
     <Tarjeta titulo="Plan">
       <div className="pila">
-        <div style={{ fontSize: 22, fontWeight: 600, textTransform: "capitalize" }}>{datos.plan}</div>
+        <div style={{ fontSize: 22, fontWeight: 600, textTransform: "capitalize" }}>
+          {datos.plan}
+          {datos.prueba && <span className="pill medio" style={{ marginLeft: 8, verticalAlign: "middle" }}>Prueba gratis</span>}
+        </div>
         <div>{datos.max_equipos === null ? `${datos.equipos_registrados} equipos (ilimitados)` : `${datos.equipos_registrados} de ${datos.max_equipos} equipos`}</div>
         {datos.cliente && <div><span className="tenue">A nombre de </span>{datos.cliente}</div>}
         {datos.vence && <div><span className="tenue">Vence </span>{fecha(datos.vence)}</div>}
         {datos.aviso && <div className="aviso atencion">{datos.aviso}</div>}
+        {datos.prueba && (
+          <div className="aviso info">
+            Estás probando Pro. Al vencer vuelve al plan gratis sin perder nada.{" "}
+            <a href={`${SITIO}/pro`} target="_blank" rel="noreferrer">Obtener Pro</a> (se paga en Ko-fi, con PayPal o tarjeta).
+          </div>
+        )}
       </div>
-      {puede(usuario?.rol, "administrar_usuarios") && (
+      {admin && datos.plan === "gratis" && (
+        <div className="prueba-pro">
+          <h3 style={{ margin: "0 0 4px" }}>Prueba Pro gratis 14 días</h3>
+          <p className="tenue" style={{ margin: "0 0 12px" }}>
+            Equipos ilimitados, informes en PDF, OLT GPON, avisos al equipo y predicción de capacidad, con tu red. Sin tarjeta;
+            al terminar vuelve al plan gratis sin perder datos.
+          </p>
+          <Formulario
+            textoBoton="Empezar la prueba"
+            onEnviar={async () => {
+              await api("/licencia/prueba", { metodo: "POST", cuerpo: { email: correo.trim() } });
+              recargar();
+            }}
+          >
+            <Campo etiqueta="Tu correo" ayuda="Para avisarte antes de que termine. Una prueba por instalación.">
+              <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} required autoComplete="email" />
+            </Campo>
+          </Formulario>
+        </div>
+      )}
+      {admin && (
         <div style={{ marginTop: 16 }}>
           <Formulario
             textoBoton="Instalar licencia"
@@ -181,6 +218,7 @@ function LicenciaYPlan() {
         </div>
       )}
     </Tarjeta>
+    </div>
   );
 }
 
