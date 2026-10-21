@@ -1,5 +1,10 @@
 # Cambios
 
+## v0.1.9
+
+- **Seguridad:** Pillow 13.0.0 (corrige 8 vulnerabilidades conocidas de la
+  12.3; mufa la usa para el logo de los informes PDF) y certifi 2026.10.19.
+
 ## v0.1.8
 
 - **Mapa de la red:** mufa lee por SNMP los vecinos de cada equipo (LLDP, CDP
