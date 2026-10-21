@@ -21,6 +21,7 @@ from mufa.api import (
     rutas_fibra,
     rutas_inventario,
     rutas_ipam,
+    rutas_mapa,
     rutas_monitoreo,
     rutas_panel,
     rutas_red,
@@ -151,6 +152,7 @@ def crear_app(ajustes: Ajustes | None = None, migrar: bool = True) -> FastAPI:
         rutas_vlans,
         rutas_fibra,
         rutas_red,
+        rutas_mapa,
         rutas_terminal,
     ):
         app.include_router(modulo.router, prefix=PREFIJO)

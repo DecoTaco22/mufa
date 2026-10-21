@@ -5,16 +5,18 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 
 from mufa import copias, marcas, respaldos
 from mufa.api.deps import DB, Estado, requiere
 from mufa.api.esquemas import (
+    BusquedaEnRespaldo,
     DestinoEntrada,
     DestinoSalida,
     Diferencias,
     EquipoEnRespaldos,
+    LineaEncontrada,
     ProgramaRespaldos,
     PruebaDestino,
     RespaldoConContenido,
@@ -78,6 +80,30 @@ def listar(equipo_id: int, _: Lector, db: DB) -> list[RespaldoSalida]:
     obtener_equipo(db, equipo_id)
     consulta = select(Respaldo).where(Respaldo.equipo_id == equipo_id).order_by(Respaldo.id.desc())
     return [RespaldoSalida.model_validate(r) for r in db.scalars(consulta)]
+
+
+@router.get("/respaldos/buscar")
+def buscar(
+    usuario: Tecnico,
+    db: DB,
+    estado: Estado,
+    q: Annotated[str, Query(min_length=2, max_length=200)],
+    todas: bool = False,
+) -> list[BusquedaEnRespaldo]:
+    """Busca un texto en la configuración de todos los equipos (la última versión, o todas)."""
+    encontrados = respaldos.buscar(db, estado.cifrador, q, todas)
+    registrar(db, usuario, "respaldo.buscar", q[:120], {"equipos": len(encontrados)})
+    return [
+        BusquedaEnRespaldo(
+            equipo_id=c.equipo.id,
+            equipo=c.equipo.nombre,
+            respaldo_id=c.respaldo.id,
+            creado=c.respaldo.creado,
+            lineas=[LineaEncontrada(numero=n, texto=t) for n, t in c.lineas],
+            total=c.total,
+        )
+        for c in encontrados
+    ]
 
 
 @router.get("/respaldos/{respaldo_id}")

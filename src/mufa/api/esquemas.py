@@ -277,6 +277,20 @@ class RespaldoSalida(_Salida):
     hash_normalizado: str
 
 
+class LineaEncontrada(BaseModel):
+    numero: int
+    texto: str
+
+
+class BusquedaEnRespaldo(BaseModel):
+    equipo_id: int
+    equipo: str
+    respaldo_id: int
+    creado: datetime
+    lineas: list[LineaEncontrada]
+    total: int
+
+
 class ResultadoRespaldo(BaseModel):
     respaldo: RespaldoSalida
     cambio: bool

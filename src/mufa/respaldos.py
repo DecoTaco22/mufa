@@ -194,3 +194,46 @@ def diferencias(
             lineterm="",
         )
     )
+
+
+@dataclass
+class Coincidencias:
+    equipo: Equipo
+    respaldo: Respaldo
+    lineas: list[tuple[int, str]]  # (número de línea, texto)
+    total: int
+
+
+def buscar(
+    db: Session,
+    cifrador: Cifrador,
+    texto: str,
+    todas_las_versiones: bool = False,
+    por_respaldo: int = 30,
+) -> list[Coincidencias]:
+    """Las líneas que contienen `texto` (sin distinguir mayúsculas) en los respaldos.
+
+    Por defecto busca en la última versión de cada equipo; con todas_las_versiones,
+    también en las anteriores (por ejemplo, para saber cuándo apareció una IP).
+    """
+    buscado = texto.lower()
+    consulta = select(Respaldo).order_by(Respaldo.equipo_id, Respaldo.id.desc())
+    vistos: set[int] = set()
+    resultado: list[Coincidencias] = []
+    for respaldo in db.scalars(consulta):
+        if not todas_las_versiones and respaldo.equipo_id in vistos:
+            continue
+        vistos.add(respaldo.equipo_id)
+        lineas = [
+            (numero, linea.rstrip())
+            for numero, linea in enumerate(contenido(respaldo, cifrador).splitlines(), start=1)
+            if buscado in linea.lower()
+        ]
+        if lineas:
+            equipo = db.get(Equipo, respaldo.equipo_id)
+            if equipo is not None:
+                resultado.append(
+                    Coincidencias(equipo, respaldo, lineas[:por_respaldo], len(lineas))
+                )
+    resultado.sort(key=lambda c: (c.equipo.nombre.lower(), -c.respaldo.id))
+    return resultado

@@ -15,6 +15,7 @@ const SECCIONES: { titulo: string | null; enlaces: Enlace[] }[] = [
     titulo: "Red",
     enlaces: [
       { ruta: "/equipos", icono: "equipo", texto: "Equipos" },
+      { ruta: "/mapa", icono: "cable", texto: "Mapa" },
       { ruta: "/hallazgos", icono: "hallazgos", texto: "Hallazgos" },
       { ruta: "/respaldos", icono: "descarga", texto: "Respaldos" },
       { ruta: "/ipam", icono: "red", texto: "IPAM" },

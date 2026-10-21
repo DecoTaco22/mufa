@@ -121,6 +121,8 @@ export function Respaldos() {
 
           <ServidorDeCopia destino={datos.destino} editable={senior} onGuardado={recargar} />
 
+          {puede(usuario?.rol, "usar_credenciales") && <Buscador />}
+
           <Tarjeta titulo="Equipos" sinRelleno>
             {!datos.equipos.length ? (
               <Vacio titulo="Todavía no hay equipos">Agrega equipos con su usuario SSH para respaldarlos.</Vacio>
@@ -347,3 +349,92 @@ function ServidorDeCopia({ destino, editable, onGuardado }: { destino: Destino; 
     </Tarjeta>
   );
 }
+
+interface Encontrado {
+  equipo_id: number;
+  equipo: string;
+  respaldo_id: number;
+  creado: string;
+  lineas: { numero: number; texto: string }[];
+  total: number;
+}
+
+function Buscador() {
+  const [texto, setTexto] = useState("");
+  const [todas, setTodas] = useState(false);
+  const [resultado, setResultado] = useState<{ buscado: string; encontrados: Encontrado[] } | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function buscar() {
+    const q = texto.trim();
+    if (q.length < 2) return;
+    setBuscando(true);
+    setError(null);
+    try {
+      const encontrados = await api<Encontrado[]>(`/respaldos/buscar?q=${encodeURIComponent(q)}&todas=${todas}`);
+      setResultado({ buscado: q, encontrados });
+    } catch (e) {
+      setError(textoDeError(e));
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  function resaltar(linea: string, buscado: string) {
+    const i = linea.toLowerCase().indexOf(buscado.toLowerCase());
+    if (i < 0) return linea;
+    return (
+      <>
+        {linea.slice(0, i)}
+        <mark>{linea.slice(i, i + buscado.length)}</mark>
+        {linea.slice(i + buscado.length)}
+      </>
+    );
+  }
+
+  return (
+    <Tarjeta titulo="Buscar en las configuraciones">
+      <form className="fila" style={{ gap: 8, flexWrap: "wrap", alignItems: "center" }} onSubmit={(e) => { e.preventDefault(); void buscar(); }}>
+        <input
+          className="mono crece"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder="Una IP, una VLAN, un vecino BGP, una comunidad SNMP…"
+          aria-label="Texto a buscar"
+          minLength={2}
+          style={{ minWidth: 220 }}
+        />
+        <label className="casilla"><input type="checkbox" checked={todas} onChange={(e) => setTodas(e.target.checked)} /> También en versiones anteriores</label>
+        <button className="boton primario" disabled={buscando || texto.trim().length < 2}>{buscando ? "Buscando…" : "Buscar"}</button>
+      </form>
+      {error && <div className="aviso error" style={{ marginTop: 12 }}>{error}</div>}
+      {resultado && (
+        <div className="pila" style={{ marginTop: 14, gap: 12 }}>
+          {resultado.encontrados.length === 0 ? (
+            <div className="tenue">«{resultado.buscado}» no aparece en {todas ? "ningún respaldo" : "la última configuración de ningún equipo"}.</div>
+          ) : (
+            <div className="tenue" style={{ fontSize: 13 }}>
+              Aparece en {resultado.encontrados.length} {resultado.encontrados.length === 1 ? "respaldo" : "respaldos"}.
+            </div>
+          )}
+          {resultado.encontrados.map((e) => (
+            <div key={e.respaldo_id} className="busqueda-respaldo">
+              <div className="entre" style={{ marginBottom: 6 }}>
+                <Link to={`/equipos/${e.equipo_id}`} style={{ fontWeight: 600 }}>{e.equipo}</Link>
+                <span className="tenue" style={{ fontSize: 12 }}>versión del {fecha(e.creado)}</span>
+              </div>
+              <pre className="mono">
+                {e.lineas.map((l) => (
+                  <div key={l.numero}><span className="tenue">{String(l.numero).padStart(5, " ")}  </span>{resaltar(l.texto, resultado.buscado)}</div>
+                ))}
+              </pre>
+              {e.total > e.lineas.length && <div className="tenue" style={{ fontSize: 12 }}>y {e.total - e.lineas.length} líneas más</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </Tarjeta>
+  );
+}
+

@@ -69,7 +69,11 @@ solución lista para copiar y por qué importa.
 **Herramientas**
 - **Terminal** SSH, Telnet y puerto serie dentro de la app, con pestañas y
   la lista de tus equipos. Verifica la clave de cada equipo como PuTTY.
-- Ping, traceroute, DNS y puertos con la salida en vivo.
+- Ping, traceroute, MTR, DNS y puertos con la salida en vivo.
+- Mapa de topología con los vecinos LLDP, CDP y MikroTik de cada equipo, y
+  modo NOC a pantalla completa para el televisor del NOC.
+- Buscador en las configuraciones respaldadas de todos los equipos (y en las
+  versiones anteriores).
 - "¿Dónde está?": busca una IP o una MAC en las tablas ARP y de bridge de
   todos tus equipos.
 - Calculadora IP: `/24` → `255.255.255.0`, wildcard, hosts y subredes.

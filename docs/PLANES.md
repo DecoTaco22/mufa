@@ -59,25 +59,27 @@ Los pedidos de ambos llegan por el formulario del sitio (tipos «servicio» y
 | Alertas con bot y correo propios | ✓ | ✓ | ✓ |
 | **Avisos al equipo** con el bot propio: contactos y grupos | | ✓ | ✓ |
 | Escalamiento, guardias, "Lo tomo yo" | | ✓ | ✓ |
-| Ventanas de mantenimiento | | ✓ | ✓ |
+| Ventanas de mantenimiento *(próximamente)* | | ✓ | ✓ |
 | Predicción de capacidad | | ✓ | ✓ |
-| Alertas de potencia óptica por tendencia | | ✓ | ✓ |
+| Alertas de potencia óptica por tendencia *(próximamente)* | | ✓ | ✓ |
 | OLT GPON (Huawei, ZTE) | | ✓ | ✓ |
-| Consumo por cliente (NetFlow) | | ✓ | ✓ |
+| Consumo por cliente (NetFlow) *(próximamente)* | | ✓ | ✓ |
 | Informes en PDF con su logo | | ✓ | ✓ |
-| Página de estado pública | | ✓ | ✓ |
-| Integración con WispHub y Mikrowisp | | ✓ | ✓ |
-| Respaldo externo cifrado | | ✓ | ✓ |
-| Restauración de configuraciones | | ✓ | ✓ |
-| Cambios masivos con Ansible y aprobación | | ✓ | ✓ |
-| Varios clientes separados en una instalación | | | a medida |
-| AAA de equipos (TACACS+ / RADIUS) | | | ✓ |
-| Mesa de ayuda N1 / N2 / N3 | | | ✓ |
-| Inicio de sesión con la cuenta de la empresa (SSO) | | | ✓ |
+| Página de estado pública *(próximamente)* | | ✓ | ✓ |
+| Integración con WispHub y Mikrowisp *(próximamente)* | | ✓ | ✓ |
+| Respaldo externo cifrado *(próximamente)* | | ✓ | ✓ |
+| Restauración de configuraciones *(próximamente)* | | ✓ | ✓ |
+| Cambios masivos con Ansible y aprobación *(próximamente)* | | ✓ | ✓ |
+| Varios clientes separados en una instalación *(próximamente)* | | | a medida |
+| AAA de equipos (TACACS+ / RADIUS) *(próximamente)* | | | ✓ |
+| Mesa de ayuda N1 / N2 / N3 *(próximamente)* | | | ✓ |
+| Inicio de sesión con la cuenta de la empresa (SSO) *(próximamente)* | | | ✓ |
 | Soporte | comunidad | 1 día hábil | 4 horas |
 
-Las funciones de la tabla se van publicando por etapas; el estado de cada
-una está en el historial del repositorio.
+Lo marcado *(próximamente)* todavía no existe: se va construyendo por etapas,
+según lo que pidan los clientes, y se suma al plan sin costo extra cuando sale.
+La restauración de configuraciones necesitaría escribir en los equipos: si se
+hace, será opcional y explícita, porque mufa por defecto solo lee.
 
 ## Cómo funciona la licencia
 

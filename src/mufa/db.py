@@ -381,6 +381,22 @@ class InterfazVigilada(Base):
     creado: Mapped[datetime] = mapped_column(default=ahora)
 
 
+class Vecino(Base):
+    """Un equipo conectado a una interfaz, visto por LLDP, CDP o MikroTik (para el mapa)."""
+
+    __tablename__ = "vecinos"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    equipo_id: Mapped[int] = mapped_column(ForeignKey("equipos.id", ondelete="CASCADE"), index=True)
+    interfaz: Mapped[str] = mapped_column(String(255), default="")
+    remoto_nombre: Mapped[str] = mapped_column(String(255), default="")
+    remoto_puerto: Mapped[str] = mapped_column(String(255), default="")
+    remoto_ip: Mapped[str] = mapped_column(String(64), default="")
+    plataforma: Mapped[str] = mapped_column(String(255), default="")
+    fuente: Mapped[str] = mapped_column(String(16))  # lldp, cdp o mikrotik
+    visto: Mapped[datetime] = mapped_column(default=ahora)
+
+
 class Olt(Base):
     """Un equipo que se sondea también como OLT GPON (mufa Pro)."""
 

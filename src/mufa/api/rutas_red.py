@@ -328,6 +328,12 @@ def traceroute(entrada: Herramienta, _: Diagnostico) -> SalidaHerramienta:
     return _herramienta(herramientas.traceroute, entrada.destino)
 
 
+@router.post("/herramientas/mtr")
+def mtr(entrada: Herramienta, _: Diagnostico) -> SalidaHerramienta:
+    """Traceroute y luego 10 pings a cada salto: dónde se pierde o se demora el tráfico."""
+    return _herramienta(herramientas.mtr, entrada.destino)
+
+
 @router.post("/herramientas/dns")
 def dns(entrada: Herramienta, _: Diagnostico) -> SalidaHerramienta:
     return _herramienta(herramientas.dns, entrada.destino)

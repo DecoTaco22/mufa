@@ -141,3 +141,55 @@ def test_marca_sin_adaptador_no_se_respalda(cliente: TestClient, admin: dict[str
     respuesta = cliente.post(f"{API}/equipos/{equipo_id}/respaldar", headers=admin)
     assert respuesta.status_code == 422
     assert "SNMP" in respuesta.json()["detail"]
+
+
+def test_buscar_en_las_configuraciones(cliente: TestClient, admin: dict[str, str]) -> None:
+    from mufa.db import Equipo, Respaldo
+
+    estado = cliente.app.state.mufa  # type: ignore[attr-defined]
+
+    def respaldo(db, equipo: Equipo, texto: str) -> None:  # type: ignore[no-untyped-def]
+        db.add(
+            Respaldo(
+                equipo_id=equipo.id,
+                origen="manual",
+                hash_normalizado=str(hash(texto)),
+                tamano=len(texto),
+                contenido_cifrado=estado.cifrador.cifrar(texto),
+            )
+        )
+        db.flush()
+
+    with estado.sesiones() as db:
+        core = Equipo(nombre="CORE", marca="cisco", ip_gestion="10.0.0.1")
+        borde = Equipo(nombre="BORDE", marca="mikrotik", ip_gestion="10.0.0.2")
+        db.add_all([core, borde])
+        db.flush()
+        respaldo(
+            db, core, "hostname CORE\nrouter bgp 65000\n neighbor 198.51.100.1 remote-as 65001\nend"
+        )
+        respaldo(
+            db, core, "hostname CORE\nrouter bgp 65000\n neighbor 203.0.113.1 remote-as 65002\nend"
+        )
+        respaldo(db, borde, "/ip address\nadd address=203.0.113.10/30 interface=sfp1")
+        db.commit()
+
+    r = cliente.get(f"{API}/respaldos/buscar", params={"q": "203.0.113.1"}, headers=admin)
+    assert r.status_code == 200, r.text
+    encontrados = r.json()
+    assert [(e["equipo"], e["lineas"][0]["numero"]) for e in encontrados] == [
+        ("BORDE", 2),
+        ("CORE", 3),
+    ]
+    # La IP vieja ya no está en la última versión... pero sí en el historial.
+    assert (
+        cliente.get(f"{API}/respaldos/buscar", params={"q": "198.51.100.1"}, headers=admin).json()
+        == []
+    )
+    historial = cliente.get(
+        f"{API}/respaldos/buscar", params={"q": "198.51.100.1", "todas": True}, headers=admin
+    ).json()
+    assert [e["equipo"] for e in historial] == ["CORE"]
+    assert (
+        cliente.get(f"{API}/respaldos/buscar", params={"q": "x"}, headers=admin).status_code == 422
+    )

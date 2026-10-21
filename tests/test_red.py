@@ -472,3 +472,32 @@ def test_agente_n1_diagnostica_pero_no_entra_a_los_equipos(
     assert cliente.post(f"{API}/herramientas/dns", json=cuerpo, headers=agente).status_code == 200
     assert cliente.post(f"{API}/herramientas/dns", json=cuerpo, headers=lectura).status_code == 403
     assert cliente.get(f"{API}/terminal/puertos-serie", headers=agente).status_code == 403
+
+
+def test_mtr_lee_los_saltos_y_los_tiempos() -> None:
+    from mufa import herramientas as h
+
+    linux = " 1  192.168.0.1  0.512 ms  0.4 ms  0.4 ms\n 2  * * *\n 3  1.1.1.1  10.1 ms  9.8 ms  10.0 ms\n"
+    windows = "  1    <1 ms    <1 ms    <1 ms  192.168.0.1\n  2     *        *        *     Tiempo de espera agotado.\n  3    10 ms    11 ms    10 ms  1.1.1.1\n"
+    for texto in (linux, windows):
+        saltos = h.saltos_de_traceroute(texto)
+        assert [(s.numero, s.ip) for s in saltos] == [(1, "192.168.0.1"), (2, None), (3, "1.1.1.1")]
+    assert h.rtt_de_ping("64 bytes from 1.1.1.1: icmp_seq=1 ttl=57 time=12.3 ms") == 12.3
+    assert h.rtt_de_ping("Respuesta desde 1.1.1.1: bytes=32 tiempo=15ms TTL=57") == 15.0
+    assert h.rtt_de_ping("Reply from 192.168.0.1: bytes=32 time<1ms TTL=64") == 0.5
+    assert h.rtt_de_ping("Request timed out.") is None
+
+
+def test_mtr_informe_con_perdida(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from mufa import herramientas as h
+
+    traza = " 1  192.168.0.1  1 ms\n 2  * * *\n 3  1.1.1.1  10 ms\n"
+    monkeypatch.setattr(h, "traceroute", lambda destino, saltos=20: h.Salida(True, traza, 1.0))
+    respuestas = {"192.168.0.1": [1.0, 2.0, 3.0, 4.0], "1.1.1.1": [10.0, None, 12.0, None]}
+    monkeypatch.setattr(h, "_un_ping", lambda ip: respuestas[ip].pop(0))
+    salida = h.mtr("1.1.1.1", rondas=4)
+    assert salida.ok
+    lineas = salida.texto.splitlines()
+    assert "192.168.0.1" in lineas[2] and " 0.0 " in lineas[2] and "2.5" in lineas[2]
+    assert "???" in lineas[3] and "100.0" in lineas[3]
+    assert "1.1.1.1" in lineas[4] and "50.0" in lineas[4] and "11.0" in lineas[4]

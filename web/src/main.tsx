@@ -15,6 +15,7 @@ import { Hallazgos } from "./paginas/Hallazgos";
 import { Herramientas } from "./paginas/Herramientas";
 import { Terminal } from "./paginas/Terminal";
 import { Ipam } from "./paginas/Ipam";
+import { Mapa, ModoNoc } from "./paginas/Mapa";
 import { Panel } from "./paginas/Panel";
 import { Planes } from "./paginas/Planes";
 import { PaginaPro } from "./paginas/Pro";
@@ -36,10 +37,13 @@ function Rutas() {
 
   return (
     <Routes>
+      {/* El modo NOC ocupa toda la pantalla, sin el menú. */}
+      <Route path="noc" element={<ModoNoc />} />
       <Route element={<Marco />}>
         <Route index element={<Panel />} />
         <Route path="equipos" element={<Equipos />} />
         <Route path="equipos/:id" element={<EquipoDetalle />} />
+        <Route path="mapa" element={<Mapa />} />
         <Route path="hallazgos" element={<Hallazgos />} />
         <Route path="ipam" element={<Ipam />} />
         <Route path="vlans" element={<Vlans />} />

@@ -1,5 +1,18 @@
 # Cambios
 
+## v0.1.8
+
+- **Mapa de la red:** mufa lee por SNMP los vecinos de cada equipo (LLDP, CDP
+  de Cisco y la tabla de vecinos de MikroTik) y dibuja qué está conectado con
+  qué, con el estado de cada uno. Los vecinos que no están en mufa también
+  aparecen, para saber qué falta agregar.
+- **Modo NOC:** pantalla completa para el televisor del NOC, con caídos,
+  respaldos, seguridad, el mapa y los últimos avisos; se actualiza sola.
+- **MTR** en Herramientas: dónde se pierde o se demora el tráfico en el camino.
+- **Buscador en los respaldos:** una IP, una VLAN o un vecino BGP en la
+  configuración de todos los equipos, también en versiones anteriores.
+- Dependencias al día (cryptography, SQLAlchemy, FastAPI, vite y otras).
+
 ## v0.1.7
 
 - **Prueba gratis de Pro por 14 días**, desde Ajustes › Plan o desde la

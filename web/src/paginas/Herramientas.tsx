@@ -5,7 +5,7 @@ import { BotonCopiar, Encabezado, MensajeError, Segmentado, Tarjeta } from "../c
 import type { RespuestaDonde, SalidaHerramienta } from "../tipos";
 import { calcularSubred, ipv4ANumero, mascaraAPrefijo, mascaraDePrefijo, type Subred } from "../subredes";
 
-type Prueba = "ping" | "traceroute" | "dns" | "puerto";
+type Prueba = "ping" | "traceroute" | "mtr" | "dns" | "puerto";
 
 export function Herramientas() {
   return (
@@ -53,6 +53,7 @@ function Terminal() {
     const d = destino.trim();
     if (prueba === "ping") return `ping ${cantidad === "continuo" ? "-t " : `-c ${cantidad} `}${d}`;
     if (prueba === "traceroute") return `traceroute ${d}`;
+    if (prueba === "mtr") return `mtr --report ${d}`;
     if (prueba === "dns") return `nslookup ${d}`;
     return `tcping ${d} ${puerto}`;
   }
@@ -91,6 +92,7 @@ function Terminal() {
           agregar(codigo === "0" ? { texto: "✓ terminado", tipo: "ok" } : { texto: `✗ terminó con código ${codigo}`, tipo: "error" });
         }
       } else {
+        if (prueba === "mtr") agregar({ texto: "Buscando los saltos y midiendo cada uno (10 rondas, unos 20 segundos)…", tipo: "nota" });
         const salida = await api<SalidaHerramienta>(`/herramientas/${prueba}`, {
           metodo: "POST",
           cuerpo: { destino: d, puerto: prueba === "puerto" ? Number(puerto) : null },
@@ -118,6 +120,7 @@ function Terminal() {
           opciones={[
             { valor: "ping", texto: "Ping" },
             { valor: "traceroute", texto: "Traceroute" },
+            { valor: "mtr", texto: "MTR" },
             { valor: "dns", texto: "DNS" },
             { valor: "puerto", texto: "Puerto TCP" },
           ]}

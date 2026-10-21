@@ -17,6 +17,7 @@ import sys
 import threading
 import time
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Self
 
@@ -232,3 +233,127 @@ def puerto(destino: str, numero: int, tiempo_maximo: float = 3.0) -> Salida:
         )
     except OSError as error:
         return Salida(False, f"{destino}:{numero}: {error}", time.monotonic() - inicio)
+
+
+# --- MTR: traceroute + ping a cada salto, varias rondas --------------------------
+
+_TIEMPO_PING = re.compile(r"(?:time|tiempo)\s*([=<])\s*([\d.,]+)\s*ms", re.IGNORECASE)
+
+
+@dataclass
+class Salto:
+    numero: int
+    ip: str | None  # None: el salto no respondió al traceroute («* * *»)
+    enviados: int = 0
+    recibidos: int = 0
+    ultimo: float | None = None
+    mejor: float | None = None
+    peor: float | None = None
+    suma: float = 0.0
+
+    @property
+    def perdida(self) -> float:
+        return 100.0 * (1 - self.recibidos / self.enviados) if self.enviados else 100.0
+
+    @property
+    def promedio(self) -> float | None:
+        return self.suma / self.recibidos if self.recibidos else None
+
+    def anotar(self, rtt: float | None) -> None:
+        self.enviados += 1
+        if rtt is None:
+            return
+        self.recibidos += 1
+        self.ultimo = rtt
+        self.suma += rtt
+        self.mejor = rtt if self.mejor is None else min(self.mejor, rtt)
+        self.peor = rtt if self.peor is None else max(self.peor, rtt)
+
+
+def saltos_de_traceroute(texto: str) -> list[Salto]:
+    """Los saltos de la salida de traceroute (Linux, macOS) o tracert (Windows)."""
+    saltos: list[Salto] = []
+    for linea in texto.splitlines():
+        partes = linea.split()
+        if not partes or not partes[0].isdigit():
+            continue
+        ip = None
+        for parte in partes[1:]:
+            try:
+                ip = str(ipaddress.ip_address(parte.strip("()[]")))
+                break
+            except ValueError:
+                continue
+        saltos.append(Salto(int(partes[0]), ip))
+    return saltos
+
+
+def rtt_de_ping(texto: str) -> float | None:
+    """Milisegundos de la respuesta de un ping («time=12.3 ms», «tiempo<1m», …)."""
+    if encontrado := _TIEMPO_PING.search(texto):
+        valor = float(encontrado.group(2).replace(",", "."))
+        return valor / 2 if encontrado.group(1) == "<" else valor
+    return None
+
+
+def _un_ping(ip: str) -> float | None:
+    try:
+        resultado = subprocess.run(  # IP validada, sin shell
+            comando_ping(ip, 1),
+            capture_output=True,
+            text=True,
+            encoding=CODIFICACION,
+            errors="replace",
+            timeout=5,
+            check=False,
+            creationflags=SIN_VENTANA,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    return rtt_de_ping(resultado.stdout) if resultado.returncode == 0 else None
+
+
+def informe_mtr(destino: str, saltos: list[Salto]) -> str:
+    def ms(valor: float | None) -> str:
+        return "—" if valor is None else f"{valor:.1f}"
+
+    lineas = [
+        f"MTR a {destino}: {saltos[0].enviados if saltos else 0} rondas",
+        f"{'#':>3}  {'Salto':<40} {'Pérd%':>6} {'Env':>4} {'Últ':>7} {'Prom':>7} {'Mejor':>7} {'Peor':>7}",
+    ]
+    for s in saltos:
+        lineas.append(
+            f"{s.numero:>3}  {(s.ip or '???'):<40} {s.perdida:>6.1f} {s.enviados:>4} "
+            f"{ms(s.ultimo):>7} {ms(s.promedio):>7} {ms(s.mejor):>7} {ms(s.peor):>7}"
+        )
+    return "\n".join(lineas)
+
+
+def mtr(destino: str, rondas: int = 10, saltos_max: int = 20) -> Salida:
+    """Como mtr --report: dónde se pierden paquetes o sube la latencia en el camino."""
+    traza = traceroute(destino, saltos_max)
+    saltos = saltos_de_traceroute(traza.texto)
+    if not saltos:
+        return Salida(False, traza.texto or "traceroute no devolvió saltos", traza.segundos)
+    if not _EN_CURSO.acquire(blocking=False):
+        raise Ocupado("hay varias herramientas corriendo; prueba en unos segundos")
+    inicio = time.monotonic()
+    try:
+        con_ip = [s for s in saltos if s.ip]
+        with ThreadPoolExecutor(max_workers=8) as grupo:
+            for _ in range(rondas):
+                for salto, rtt in zip(
+                    con_ip, grupo.map(lambda s: _un_ping(s.ip), con_ip), strict=True
+                ):
+                    salto.anotar(rtt)
+                for salto in saltos:
+                    if salto.ip is None:
+                        salto.anotar(None)
+    finally:
+        _EN_CURSO.release()
+    ultimo = saltos[-1]
+    return Salida(
+        ultimo.recibidos > 0,
+        informe_mtr(destino, saltos),
+        traza.segundos + time.monotonic() - inicio,
+    )
