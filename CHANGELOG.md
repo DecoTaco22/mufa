@@ -1,5 +1,11 @@
 # Cambios
 
+## v0.1.10
+
+- **Seguridad:** opentelemetry-api 1.45.1 (la trae FastAPI; corrige
+  CVE-2026-114603).
+- React 19.3.1 y pre-commit 4.7.
+
 ## v0.1.9
 
 - **Seguridad:** Pillow 13.0.0 (corrige 8 vulnerabilidades conocidas de la

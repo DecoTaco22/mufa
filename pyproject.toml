@@ -1,6 +1,6 @@
 [project]
 name = "mufa"
-version = "0.1.9"
+version = "0.1.10"
 description = "Herramientas de diagnóstico de solo lectura para operadores de internet pequeños."
 readme = "README.md"
 requires-python = ">=3.11"
