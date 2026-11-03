@@ -1,4 +1,5 @@
 // Mapa de topología (vecinos LLDP, CDP y MikroTik) y modo NOC para la pantalla del NOC.
+import { LOCALE } from "../i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { api, textoDeError } from "../api";
@@ -293,7 +294,7 @@ export function ModoNoc() {
           <img src="/favicon.svg" alt="" width={34} height={34} />
           <strong style={{ fontSize: 24 }}>mufa · NOC</strong>
         </div>
-        <div className="noc-reloj">{ahora.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
+        <div className="noc-reloj">{ahora.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
         <div className="fila" style={{ gap: 8 }}>
           <button className="boton chico" onClick={() => void document.documentElement.requestFullscreen?.()}>Pantalla completa</button>
           <Link className="boton chico" to="/mapa">Salir</Link>
@@ -340,7 +341,7 @@ export function ModoNoc() {
               <h2 style={{ marginTop: 18 }}>Últimos avisos</h2>
               {(mapa?.eventos ?? []).slice(0, 8).map((e, i) => (
                 <div key={i} className="noc-evento">
-                  <span className="tenue">{new Date(e.cuando).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}</span>
+                  <span className="tenue">{new Date(e.cuando).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" })}</span>
                   <span>{e.titulo}: <strong>{e.objeto}</strong></span>
                 </div>
               ))}

@@ -1,3 +1,4 @@
+import { LOCALE } from "../i18n";
 import { useEffect, useState } from "react";
 import { api, textoDeError } from "../api";
 import { Campo, Encabezado, MensajeError, Tarjeta } from "../componentes/ui";
@@ -23,7 +24,7 @@ function useCalculo(ruta: string, cuerpo: Record<string, unknown>) {
 
 const n = (v: string | undefined) => (v === undefined || v === "" ? 0 : Number(v));
 const f = (v: number | boolean | undefined, decimales = 1) =>
-  typeof v === "number" ? v.toLocaleString("es", { maximumFractionDigits: decimales, minimumFractionDigits: decimales }) : "—";
+  typeof v === "number" ? v.toLocaleString(LOCALE, { maximumFractionDigits: decimales, minimumFractionDigits: decimales }) : "—";
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (

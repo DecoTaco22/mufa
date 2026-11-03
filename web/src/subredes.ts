@@ -1,4 +1,5 @@
 // Calculadora de subredes IPv4 e IPv6, sin dependencias. Corre en el navegador.
+import { LOCALE } from "./i18n";
 
 export interface Subred {
   filas: [string, string][];
@@ -43,7 +44,7 @@ function calcularV4(ip: string, prefijo: number): Subred {
     ["Última utilizable", numeroAIpv4(ultima)],
   ];
   if (prefijo < 31) filas.push(["Broadcast", numeroAIpv4(broadcast)]);
-  filas.push(["Direcciones utilizables", utilizables.toLocaleString("es")]);
+  filas.push(["Direcciones utilizables", utilizables.toLocaleString(LOCALE)]);
   if (prefijo === 31) filas.push(["Nota", "/31: enlace punto a punto (RFC 3021), sin red ni broadcast"]);
   return { filas };
 }
@@ -85,7 +86,7 @@ function calcularV6(ip: string, prefijo: number): Subred {
   const mascara = MAX_V6 ^ ((1n << bitsHost) - 1n);
   const red = direccion & mascara;
   const ultima = red | ((1n << bitsHost) - 1n);
-  const subredes64 = prefijo <= 64 ? (1n << BigInt(64 - prefijo)).toLocaleString("es") : "—";
+  const subredes64 = prefijo <= 64 ? (1n << BigInt(64 - prefijo)).toLocaleString(LOCALE) : "—";
   return {
     filas: [
       ["Red", `${numeroAIpv6(red)}/${prefijo}`],

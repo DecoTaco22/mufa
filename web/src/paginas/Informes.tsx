@@ -1,4 +1,5 @@
 // Informes en PDF (mufa Pro): el resumen del mes, la descarga y el envío mensual.
+import { LOCALE } from "../i18n";
 import { useState } from "react";
 import { api, textoDeError } from "../api";
 import { Campo, Cargando, ElegirArchivo, Encabezado, Formulario, Tarjeta } from "../componentes/ui";
@@ -52,7 +53,7 @@ function ultimosMeses(cantidad: number): { valor: string; texto: string }[] {
 }
 
 function porcentaje(v: number | null, decimales = 2): string {
-  return v === null ? "—" : `${(v * 100).toLocaleString("es", { minimumFractionDigits: decimales, maximumFractionDigits: decimales })} %`;
+  return v === null ? "—" : `${(v * 100).toLocaleString(LOCALE, { minimumFractionDigits: decimales, maximumFractionDigits: decimales })} %`;
 }
 
 function claseDisponibilidad(v: number | null): string {
@@ -111,7 +112,7 @@ function Vista({ resumen }: { resumen: Resumen }) {
           <strong>{porcentaje(resumen.disponibilidad)}</strong>
           {diferencia !== null && (
             <span className="tenue" style={{ fontSize: 12 }}>
-              {diferencia >= 0 ? "+" : ""}{diferencia.toLocaleString("es", { maximumFractionDigits: 2 })} vs. mes anterior
+              {diferencia >= 0 ? "+" : ""}{diferencia.toLocaleString(LOCALE, { maximumFractionDigits: 2 })} vs. mes anterior
             </span>
           )}
         </div>

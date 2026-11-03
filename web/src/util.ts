@@ -1,3 +1,4 @@
+import { LOCALE } from "./i18n";
 import { useCallback, useEffect, useState } from "react";
 import { api, textoDeError } from "./api";
 import type { Rol } from "./tipos";
@@ -74,7 +75,7 @@ export function useDatos<T>(ruta: string | null) {
 
 // --- formato -------------------------------------------------------------
 
-const FECHA = new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" });
+const FECHA = new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeStyle: "short" });
 
 export function fecha(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -83,7 +84,7 @@ export function fecha(iso: string | null | undefined): string {
   return FECHA.format(new Date(valor));
 }
 
-const DIA = new Intl.DateTimeFormat("es", { dateStyle: "medium" });
+const DIA = new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium" });
 
 /** Una fecha sin hora (AAAA-MM-DD), tal cual, sin correrla por la zona horaria. */
 export function dia(iso: string | null | undefined): string {
@@ -111,7 +112,7 @@ export function bps(valor: number | null | undefined): string {
     v /= 1000;
     i++;
   }
-  return `${v.toLocaleString("es", { maximumFractionDigits: v < 10 ? 1 : 0 })} ${unidades[i]}`;
+  return `${v.toLocaleString(LOCALE, { maximumFractionDigits: v < 10 ? 1 : 0 })} ${unidades[i]}`;
 }
 
 export function duracion(segundos: number | null | undefined): string {

@@ -1,3 +1,4 @@
+import { LOCALE } from "../i18n";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { api, textoDeError } from "../api";
@@ -178,7 +179,7 @@ function Horario({ resumen, editable, onGuardado }: { resumen: Resumen; editable
     }
   }
 
-  const servidor = new Date(resumen.hora_servidor).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+  const servidor = new Date(resumen.hora_servidor).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
   return (
     <div className="tarjeta respaldos-horario">
       <div className="respaldos-horario-fila">

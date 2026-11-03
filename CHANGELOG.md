@@ -1,5 +1,18 @@
 # Cambios
 
+## v0.1.12
+
+- **mufa en inglés** (issue #10): la app sale en el idioma del navegador y se
+  cambia abajo del menú (Español / English). Los datos de la red (nombres,
+  IPs, configuraciones, la terminal) nunca se traducen.
+- **Pro: consumo por cliente.** mufa recibe los flujos NetFlow v5, v9 o
+  IPFIX que manda tu router (Traffic Flow en MikroTik) y suma cuánto baja y
+  sube cada IP de cliente, hora por hora, con el nombre del IPAM. Solo bytes
+  por IP: no guarda destinos ni páginas visitadas. Acepta flujos solo de tus
+  equipos. En Docker se abre el puerto 2055/udp.
+- Comentarios y preguntas en GitHub Discussions, enlazadas desde la app, el
+  sitio y el README.
+
 ## v0.1.11
 
 - **Pro: ventanas de mantenimiento.** Programa el cambio de un equipo (o de

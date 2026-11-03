@@ -18,6 +18,7 @@ const FILAS: [string, string, string][] = [
   ["OLT GPON (Huawei, ZTE) y aviso de señal que se degrada", "", "✓"],
   ["Ventanas de mantenimiento", "", "✓"],
   ["Página de estado para tus clientes", "", "✓"],
+  ["Consumo por cliente (NetFlow / IPFIX)", "", "✓"],
   ["Informes en PDF con tu logo", "", "✓"],
   ["Soporte", "Comunidad", "1 día hábil"],
 ];

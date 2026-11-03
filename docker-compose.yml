@@ -25,6 +25,9 @@ services:
       # Solo se le habla con el nombre que sirve Caddy (contra el DNS rebinding).
       MUFA_HOSTS_PERMITIDOS: ${MUFA_DOMINIO:-localhost},127.0.0.1,localhost
     # Sin "ports": a la API solo se llega a través de Caddy, con HTTPS.
+    # Salvo los flujos de NetFlow / IPFIX de tus routers (consumo por cliente, Pro).
+    ports:
+      - "2055:2055/udp"
 
   caddy:
     image: caddy:2

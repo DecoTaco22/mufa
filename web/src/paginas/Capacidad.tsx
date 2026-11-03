@@ -1,4 +1,5 @@
 // Predicción de capacidad (mufa Pro): cuándo se queda corto cada enlace.
+import { LOCALE } from "../i18n";
 import { useState } from "react";
 import { BarraUso, Cargando, Encabezado, Tarjeta, Vacio } from "../componentes/ui";
 import { bps, useDatos } from "../util";
@@ -53,7 +54,7 @@ function cuando(p: Pronostico): string {
   if (p.dias_para_saturar === null) return "No crece";
   if (p.dias_para_saturar > 730) return "En más de 2 años";
   const dias = p.dias_para_saturar;
-  const fecha = p.fecha_saturacion ? new Date(`${p.fecha_saturacion}T12:00:00`).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" }) : "";
+  const fecha = p.fecha_saturacion ? new Date(`${p.fecha_saturacion}T12:00:00`).toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" }) : "";
   const plazo = dias <= 1 ? "Mañana" : dias < 14 ? `En ${dias} días` : dias <= 60 ? `En ${Math.round(dias / 7)} semanas` : `En ${Math.round(dias / 30)} meses`;
   return `${plazo} · ${fecha}`;
 }
@@ -61,7 +62,7 @@ function cuando(p: Pronostico): string {
 function crecimiento(p: Pronostico): string {
   if (p.crecimiento_mensual_pct === null) return "—";
   const v = p.crecimiento_mensual_pct;
-  return `${v > 0 ? "+" : ""}${v.toLocaleString("es", { maximumFractionDigits: 1 })} % al mes`;
+  return `${v > 0 ? "+" : ""}${v.toLocaleString(LOCALE, { maximumFractionDigits: 1 })} % al mes`;
 }
 
 export function Capacidad() {
@@ -155,7 +156,7 @@ function Detalle({ pronostico }: { pronostico: Pronostico }) {
       {!datos ? <Cargando /> : <Grafica historial={datos} />}
       <div className="capacidad-datos">
         <div><span className="tenue">Velocidad</span><strong>{bps(pronostico.capacidad_mbps * 1e6)}</strong></div>
-        <div><span className="tenue">Uso en horas pico</span><strong>{pronostico.uso_actual_pct.toLocaleString("es")} %</strong></div>
+        <div><span className="tenue">Uso en horas pico</span><strong>{pronostico.uso_actual_pct.toLocaleString(LOCALE)} %</strong></div>
         <div><span className="tenue">Crecimiento</span><strong>{crecimiento(pronostico)}</strong></div>
         <div>
           <span className="tenue">Confianza</span>
@@ -240,7 +241,7 @@ function marcasDeMes(t0: number, t1: number): { t: number; texto: string }[] {
   d.setMonth(d.getMonth() + 1);
   const paso = (t1 - t0) / DIA_MS > 240 ? 2 : 1;
   while (d.getTime() < t1) {
-    marcas.push({ t: d.getTime(), texto: d.toLocaleDateString("es", { month: "short" }) });
+    marcas.push({ t: d.getTime(), texto: d.toLocaleDateString(LOCALE, { month: "short" }) });
     d.setMonth(d.getMonth() + paso);
   }
   return marcas;

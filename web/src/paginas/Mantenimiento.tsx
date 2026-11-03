@@ -1,4 +1,5 @@
 // Ventanas de mantenimiento (mufa Pro): mientras duran, los equipos elegidos no avisan.
+import { LOCALE } from "../i18n";
 import { useState } from "react";
 import { api } from "../api";
 import { Campo, Encabezado, Formulario, Modal, Tarjeta, Vacio } from "../componentes/ui";
@@ -37,7 +38,7 @@ function aLocal(iso: string): string {
 }
 
 function hora(iso: string): string {
-  return new Date(iso).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
 }
 
 function cuando(v: Ventana): string {

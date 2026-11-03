@@ -1,3 +1,4 @@
+import { LOCALE } from "../i18n";
 import { useMemo, useState } from "react";
 import { Icono, type NombreIcono } from "../componentes/Icono";
 import { Cargando, Encabezado, MensajeError, Tarjeta, Vacio } from "../componentes/ui";
@@ -93,7 +94,7 @@ function dia(iso: string): string {
   const ayer = new Date(hoy.getTime() - 86_400_000);
   if (d.toDateString() === hoy.toDateString()) return "Hoy";
   if (d.toDateString() === ayer.toDateString()) return "Ayer";
-  return d.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" });
+  return d.toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
 }
 
 export function Registro() {
@@ -152,7 +153,7 @@ export function Registro() {
                         </div>
                       </div>
                       <time className="registro-hora" dateTime={e.cuando}>
-                        {new Date(e.cuando).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(e.cuando).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" })}
                       </time>
                     </li>
                   );

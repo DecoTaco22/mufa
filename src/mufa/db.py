@@ -460,6 +460,19 @@ class PotenciaOnuDiaria(Base):
         return self.suma_rx / self.muestras if self.muestras else self.min_rx
 
 
+class ConsumoIP(Base):
+    """Bytes de una IP de cliente en una hora, sumados de NetFlow / IPFIX (mufa Pro)."""
+
+    __tablename__ = "consumo_ip"
+    __table_args__ = (UniqueConstraint("ip", "hora", name="uq_consumo_ip"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ip: Mapped[str] = mapped_column(String(64))
+    hora: Mapped[datetime] = mapped_column(index=True)  # el comienzo de la hora, en UTC
+    bajada: Mapped[int] = mapped_column(BigInteger, default=0)  # bytes hacia la IP
+    subida: Mapped[int] = mapped_column(BigInteger, default=0)  # bytes desde la IP
+
+
 class ContactoNoc(Base):
     """Alguien del equipo (o un grupo) que recibe los avisos de Pro por Telegram."""
 

@@ -1,4 +1,5 @@
 // OLT GPON (mufa Pro): las ONU de cada OLT, su señal y los cortes por puerto.
+import { LOCALE } from "../i18n";
 import { useState } from "react";
 import { api } from "../api";
 import { Campo, Cargando, Encabezado, Formulario, Modal, Tarjeta, Vacio } from "../componentes/ui";
@@ -64,7 +65,7 @@ const ESTADOS: Record<EstadoOnu, { texto: string; clase: string }> = {
 };
 
 function dbm(v: number | null): string {
-  return v === null ? "—" : `${v.toLocaleString("es", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} dBm`;
+  return v === null ? "—" : `${v.toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} dBm`;
 }
 
 function caidas(c: Conteo): number {
@@ -246,7 +247,7 @@ function DetalleOlt({ olt, gestiona, onCambio }: { olt: OltInfo; gestiona: boole
                     {dbm(o.rx_dbm)}
                     {o.degradando && <div><span className="pill alto" title="La señal viene bajando cada día: revisa conectores y empalmes">Bajando</span></div>}
                   </td>
-                  <td className="tenue">{o.distancia_m === null ? "—" : `${(o.distancia_m / 1000).toLocaleString("es", { maximumFractionDigits: 2 })} km`}</td>
+                  <td className="tenue">{o.distancia_m === null ? "—" : `${(o.distancia_m / 1000).toLocaleString(LOCALE, { maximumFractionDigits: 2 })} km`}</td>
                   <td className="tenue">{hace(o.cambio)}</td>
                 </tr>
               ))}

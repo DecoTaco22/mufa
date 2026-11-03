@@ -165,6 +165,11 @@ class ModulosPro:
             return crear(db, plan)
         return None
 
+    def detener(self) -> None:
+        """Al cerrar mufa: lo que Pro tenga corriendo (el colector de NetFlow) guarda y para."""
+        if self._registro is not None and hasattr(self._registro, "al_detener"):
+            self._registro.al_detener()
+
     def tarea_frecuente(self, db: Session, plan: Any) -> None:
         """Lo que Pro revisa seguido (cada vuelta del programador, unos 15 segundos)."""
         if self._registro is not None and hasattr(self._registro, "cada_rato"):

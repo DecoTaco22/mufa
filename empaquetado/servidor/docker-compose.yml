@@ -19,6 +19,9 @@ services:
       MUFA_HOSTS_PERMITIDOS: ${MUFA_DOMINIO:-localhost},127.0.0.1,localhost
       MUFA_RETENCION_DIAS: ${MUFA_RETENCION_DIAS:-7}
     # Sin "ports": a mufa solo se llega a través de Caddy, con HTTPS.
+    # Salvo los flujos de NetFlow / IPFIX de tus routers (consumo por cliente, Pro).
+    ports:
+      - "2055:2055/udp"
 
   caddy:
     image: caddy:2

@@ -92,6 +92,7 @@ class Funcion(str, Enum):
     OLT = "olt"
     MANTENIMIENTO = "mantenimiento"
     ESTADO_PUBLICO = "estado_publico"
+    CONSUMO = "consumo"
 
 
 FUNCIONES_GRATIS = frozenset(
@@ -112,6 +113,7 @@ FUNCIONES_PRO = FUNCIONES_GRATIS | {
     Funcion.OLT,
     Funcion.MANTENIMIENTO,
     Funcion.ESTADO_PUBLICO,
+    Funcion.CONSUMO,
     Funcion.RESTAURACION,
     Funcion.AUTOMATIZACION,
 }

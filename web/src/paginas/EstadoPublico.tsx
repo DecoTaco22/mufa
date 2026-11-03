@@ -1,4 +1,5 @@
 // Página de estado pública (mufa Pro): lo que ven los clientes del ISP, y cómo se configura.
+import { LOCALE } from "../i18n";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { api, textoDeError } from "../api";
@@ -41,7 +42,7 @@ const ESTADOS: Record<string, Info> = {
 
 function porcentaje(valor: number | null): string {
   if (valor === null) return "—";
-  return `${(valor * 100).toLocaleString("es", { maximumFractionDigits: 2, minimumFractionDigits: 2 })} %`;
+  return `${(valor * 100).toLocaleString(LOCALE, { maximumFractionDigits: 2, minimumFractionDigits: 2 })} %`;
 }
 
 function claseDia(valor: number | null): string {

@@ -1,3 +1,4 @@
+import { LOCALE } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { api, textoDeError, transmitir } from "../api";
@@ -258,8 +259,8 @@ function PrefijoMascara() {
           <Dato etiqueta="Prefijo" valor={`/${bits}`} />
           <Dato etiqueta="Máscara" valor={datos.mascara} destacado />
           <Dato etiqueta="Wildcard" valor={datos.comodin} />
-          <Dato etiqueta="Hosts utilizables" valor={datos.hosts.toLocaleString("es")} />
-          <Dato etiqueta="Direcciones" valor={datos.total.toLocaleString("es")} />
+          <Dato etiqueta="Hosts utilizables" valor={datos.hosts.toLocaleString(LOCALE)} />
+          <Dato etiqueta="Direcciones" valor={datos.total.toLocaleString(LOCALE)} />
         </div>
       )}
       <div className="tabla-prefijos" role="group" aria-label="Prefijos comunes">

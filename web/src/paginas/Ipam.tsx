@@ -1,3 +1,4 @@
+import { LOCALE } from "../i18n";
 import { Icono } from "../componentes/Icono";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
@@ -96,7 +97,7 @@ export function Ipam() {
     <>
       <Encabezado
         titulo="IPAM"
-        subtitulo={datos?.length ? `${datos.length} ${datos.length === 1 ? "prefijo" : "prefijos"} · ${enUso.toLocaleString("es")} ${enUso === 1 ? "IP" : "IPs"} en uso · ${(utilizables - enUso).toLocaleString("es")} libres` : "Prefijos y direcciones documentados"}
+        subtitulo={datos?.length ? `${datos.length} ${datos.length === 1 ? "prefijo" : "prefijos"} · ${enUso.toLocaleString(LOCALE)} ${enUso === 1 ? "IP" : "IPs"} en uso · ${(utilizables - enUso).toLocaleString(LOCALE)} libres` : "Prefijos y direcciones documentados"}
         acciones={
           gestor && (
             <>
@@ -150,7 +151,7 @@ export function Ipam() {
                   <span className={`grupo-porcentaje ${g.porcentaje >= 85 ? "lleno" : g.porcentaje >= 70 ? "alto" : ""}`}>{g.porcentaje}%</span>
                 </span>
                 <span className="grupo-barra"><i style={{ width: `${Math.min(100, g.porcentaje)}%` }} /></span>
-                <span className="grupo-detalle">{g.redes.length} {g.redes.length === 1 ? "red" : "redes"} · {g.asignadas.toLocaleString("es")} {g.asignadas === 1 ? "IP" : "IPs"} en uso</span>
+                <span className="grupo-detalle">{g.redes.length} {g.redes.length === 1 ? "red" : "redes"} · {g.asignadas.toLocaleString(LOCALE)} {g.asignadas === 1 ? "IP" : "IPs"} en uso</span>
               </button>
             ))}
           </aside>
@@ -163,8 +164,8 @@ export function Ipam() {
                 </div>
                 <div className="cifras-ipam">
                   <div><strong>{grupoActual.redes.length}</strong><span>{grupoActual.redes.length === 1 ? "red" : "redes"}</span></div>
-                  <div className="uso"><strong>{grupoActual.asignadas.toLocaleString("es")}</strong><span>en uso</span></div>
-                  <div className="libre"><strong>{(grupoActual.utilizables - grupoActual.asignadas).toLocaleString("es")}</strong><span>libres</span></div>
+                  <div className="uso"><strong>{grupoActual.asignadas.toLocaleString(LOCALE)}</strong><span>en uso</span></div>
+                  <div className="libre"><strong>{(grupoActual.utilizables - grupoActual.asignadas).toLocaleString(LOCALE)}</strong><span>libres</span></div>
                 </div>
               </div>
               <div className="lista-redes">
@@ -184,7 +185,7 @@ export function Ipam() {
                       </div>
                       <div className="fila-red-uso">
                         <span className="grupo-barra"><i className={porcentaje >= 85 ? "lleno" : porcentaje >= 70 ? "alto" : ""} style={{ width: `${Math.min(100, porcentaje)}%` }} /></span>
-                        <span className="tenue">{p.asignadas.toLocaleString("es")} / {p.utilizables.toLocaleString("es")}</span>
+                        <span className="tenue">{p.asignadas.toLocaleString(LOCALE)} / {p.utilizables.toLocaleString(LOCALE)}</span>
                       </div>
                       {gestor && (
                         <span className="acciones-fila" onClick={(e) => e.stopPropagation()}>
@@ -407,9 +408,9 @@ function DireccionesDelPrefijo(props: { prefijo: Prefijo; gestor: boolean; onCer
         </div>
       )}
       <div className="cifras-ipam">
-        <div><strong>{props.prefijo.utilizables.toLocaleString("es")}</strong><span>utilizables</span></div>
-        <div className="uso"><strong>{asignadas.toLocaleString("es")}</strong><span>en uso</span></div>
-        <div className="libre"><strong>{libres.toLocaleString("es")}</strong><span>libres</span></div>
+        <div><strong>{props.prefijo.utilizables.toLocaleString(LOCALE)}</strong><span>utilizables</span></div>
+        <div className="uso"><strong>{asignadas.toLocaleString(LOCALE)}</strong><span>en uso</span></div>
+        <div className="libre"><strong>{libres.toLocaleString(LOCALE)}</strong><span>libres</span></div>
         <div className="porcentaje"><strong>{ocupado}%</strong><span>ocupado</span></div>
       </div>
       <div className="barra-doble" role="img" aria-label={`${asignadas} en uso y ${libres} libres`}>

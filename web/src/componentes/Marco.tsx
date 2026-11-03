@@ -2,6 +2,7 @@ import { AvisoActualizacion } from "./Actualizacion";
 import { Icono, type NombreIcono } from "./Icono";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
+import { cambiarIdioma, IDIOMA, type Idioma } from "../i18n";
 import { useSesion } from "../sesion";
 import { aplicarTema, type Tema, temaGuardado } from "../tema";
 import { NOMBRES_DE_ROL, type Permiso, puede } from "../util";
@@ -33,6 +34,7 @@ const SECCIONES: { titulo: string | null; enlaces: Enlace[] }[] = [
       { ruta: "/pro/informes", icono: "documento", texto: "Informes PDF", pro: true },
       { ruta: "/pro/capacidad", icono: "grafica", texto: "Capacidad", pro: true },
       { ruta: "/pro/olt", icono: "enchufe", texto: "OLT GPON", pro: true },
+      { ruta: "/pro/consumo", icono: "barras", texto: "Consumo por cliente", pro: true },
       { ruta: "/pro/mantenimiento", icono: "silencio", texto: "Mantenimiento", pro: true },
       { ruta: "/pro/estado", icono: "estrella", texto: "Página de estado", pro: true },
     ],
@@ -100,6 +102,18 @@ export function Marco() {
                 { valor: "oscuro", texto: "Oscuro" },
                 { valor: "claro", texto: "Claro" },
                 { valor: "automatico", texto: "Auto" },
+              ]}
+            />
+          </div>
+          <div translate="no">
+            <div className="tenue" style={{ fontSize: 12, marginBottom: 6 }}>{IDIOMA === "en" ? "Language" : "Idioma"}</div>
+            <Segmentado<Idioma>
+              etiqueta={IDIOMA === "en" ? "Language" : "Idioma"}
+              valor={IDIOMA}
+              onCambio={cambiarIdioma}
+              opciones={[
+                { valor: "es", texto: "Español" },
+                { valor: "en", texto: "English" },
               ]}
             />
           </div>

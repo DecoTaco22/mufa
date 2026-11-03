@@ -6,6 +6,7 @@ import type { Licencia } from "../tipos";
 import { useDatos } from "../util";
 import { Avisos } from "./Avisos";
 import { Capacidad } from "./Capacidad";
+import { Consumo } from "./Consumo";
 import { EstadoPublico } from "./EstadoPublico";
 import { Informes } from "./Informes";
 import { Mantenimiento } from "./Mantenimiento";
@@ -90,6 +91,22 @@ export const MODULOS: Record<string, Modulo> = {
     pasos: ["Agregas la OLT con SNMP.", "mufa descubre los puertos PON y las ONU.", "Ves la señal de cada cliente y recibes avisos."],
     para: "ISPs de fibra con OLT Huawei MA5600T/MA5800 o ZTE C300/C320.",
   },
+  consumo: {
+    titulo: "Consumo por cliente",
+    frase: "Quién se lleva el ancho de banda, con nombre y apellido.",
+    resumen:
+      "Tu router manda los flujos (NetFlow o IPFIX) y mufa suma cuánto baja y sube cada cliente, hora por hora, con el nombre que tiene en tu IPAM. Sin guardar a qué sitios entra nadie.",
+    color: "#5e5ce6",
+    vista: VistaConsumo,
+    beneficios: [
+      { icono: "barras", titulo: "Ranking", texto: "Los clientes que más consumen hoy, en la semana o en el mes." },
+      { icono: "reloj", titulo: "Hora por hora", texto: "Cuándo consume cada cliente: para hablar con datos de su plan." },
+      { icono: "red", titulo: "Con tu IPAM", texto: "Cada IP con el nombre del cliente que ya documentaste." },
+      { icono: "candado", titulo: "Privado", texto: "Solo bytes por IP: ni destinos ni páginas visitadas." },
+    ],
+    pasos: ["Activas la recepción en mufa.", "Configuras Traffic Flow (MikroTik) o NetFlow (Cisco) hacia mufa.", "Ves el consumo de cada cliente."],
+    para: "WISPs e ISPs que venden planes por velocidad y quieren saber quién satura la red.",
+  },
   mantenimiento: {
     titulo: "Ventanas de mantenimiento",
     frase: "Que el NOC no reciba alertas de lo que ya sabe.",
@@ -132,6 +149,7 @@ const DISPONIBLES: Record<string, () => ReactNode> = {
   olt: OltGpon,
   mantenimiento: Mantenimiento,
   estado: EstadoPublico,
+  consumo: Consumo,
 };
 // La función de la licencia que habilita cada módulo, cuando no se llama igual que la ruta.
 const FUNCION: Record<string, string> = { estado: "estado_publico" };
@@ -203,7 +221,7 @@ export function ResumenPro() {
       <div>
         <span className="insignia-pro">Pro</span>
         <h2>Todo lo del plan gratis, para un ISP que no puede perderse una falla.</h2>
-        <p className="tenue">Equipos y usuarios ilimitados, un año de historial y seis módulos pensados para operar en equipo.</p>
+        <p className="tenue">Equipos y usuarios ilimitados, un año de historial y siete módulos pensados para operar en equipo.</p>
       </div>
       <div className="pro-resumen-grilla">
         {Object.entries(MODULOS).map(([clave, m]) => {
@@ -269,6 +287,21 @@ function VistaCapacidad() {
         <text x="150" y="104" fill="currentColor" opacity=".5" fontSize="9">hoy</text>
         <text x="200" y="104" fill="currentColor" opacity=".5" fontSize="9">+6 sem</text>
       </svg>
+    </div>
+  );
+}
+
+function VistaConsumo() {
+  const filas: [string, number][] = [["Juan Pérez · 50M", 92], ["Ferretería El Sol", 71], ["María López · 20M", 48], ["Escuela Rural", 33]];
+  return (
+    <div className="maqueta grafica">
+      <div className="grafica-cabeza"><strong>Consumo de hoy</strong><span>24 h</span></div>
+      {filas.map(([nombre, pct]) => (
+        <div key={nombre} style={{ marginTop: 8, fontSize: 12 }}>
+          <div className="entre"><span>{nombre}</span><span>{Math.round(pct * 0.6)} GB</span></div>
+          <div className="barra-uso"><div style={{ width: `${pct}%` }} /></div>
+        </div>
+      ))}
     </div>
   );
 }

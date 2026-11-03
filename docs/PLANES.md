@@ -63,7 +63,7 @@ Los pedidos de ambos llegan por el formulario del sitio (tipos «servicio» y
 | Predicción de capacidad | | ✓ | ✓ |
 | Alertas de potencia óptica por tendencia | | ✓ | ✓ |
 | OLT GPON (Huawei, ZTE) | | ✓ | ✓ |
-| Consumo por cliente (NetFlow) *(próximamente)* | | ✓ | ✓ |
+| Consumo por cliente (NetFlow / IPFIX) | | ✓ | ✓ |
 | Informes en PDF con su logo | | ✓ | ✓ |
 | Página de estado pública | | ✓ | ✓ |
 | Integración con WispHub y Mikrowisp *(próximamente)* | | ✓ | ✓ |

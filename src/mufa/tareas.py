@@ -88,6 +88,7 @@ class Programador:
         self._detener.set()
         if self._hilo is not None:
             self._hilo.join(10)
+        self._proteger(self._pro.detener)
 
     def _bucle(self) -> None:
         while not self._detener.is_set():

@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { Marco } from "./componentes/Marco";
 import { Cargando } from "./componentes/ui";
 import "./estilos.css";
+import { iniciarIdioma } from "./i18n";
 import { Ajustes } from "./paginas/Ajustes";
 import { Alertas } from "./paginas/Alertas";
 import { EntradaOBienvenida } from "./paginas/Bienvenida";
@@ -28,6 +29,7 @@ import { ProveedorDeSesion, useSesion } from "./sesion";
 import { aplicarTema, temaGuardado } from "./tema";
 
 aplicarTema(temaGuardado());
+iniciarIdioma();
 
 function Rutas() {
   const { usuario, cargando } = useSesion();
