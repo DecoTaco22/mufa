@@ -50,6 +50,7 @@ dev = [
     "httpx>=0.28.1",
     "pillow>=11",
     "pyftpdlib>=2.2.0",
+    "httpx2>=2.16",
 ]
 escritorio = [
     "pywebview>=6.2.1",

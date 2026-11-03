@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Preguntas, ideas y comentarios
+    url: https://github.com/DecoTaco22/mufa/discussions
+    about: Cuéntanos cómo usas mufa, qué te faltó o pregunta lo que necesites.
   - name: Reportar una vulnerabilidad
     url: https://github.com/DecoTaco22/mufa/security/advisories/new
     about: Las vulnerabilidades se reportan en privado, nunca en un issue público.

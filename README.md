@@ -229,6 +229,14 @@ uv run pytest
 Cómo contribuir, la regla de datos sensibles y el estilo del código:
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Comentarios y preguntas
+
+¿Lo probaste? ¿Te faltó algo? Escríbelo en
+[Discussions](https://github.com/DecoTaco22/mufa/discussions): ideas, dudas o
+cómo lo usas en tu red. Los errores van en
+[issues](https://github.com/DecoTaco22/mufa/issues/new/choose) y las
+vulnerabilidades, en privado (ver [SECURITY.md](SECURITY.md)).
+
 ## Planes y apoyo
 
 mufa es open-core: esta edición gratuita es completa para redes chicas

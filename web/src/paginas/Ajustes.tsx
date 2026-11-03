@@ -144,6 +144,7 @@ function AcercaDe() {
       <div className="fila" style={{ gap: 8, flexWrap: "wrap" }}>
         <a className="boton primario" href={`${SITIO}/apoyar`} target="_blank" rel="noreferrer">Apoyar mufa</a>
         <a className="boton" href={`${SITIO}/#ideas`} target="_blank" rel="noreferrer">Sugerir una idea</a>
+        <a className="boton" href="https://github.com/DecoTaco22/mufa/discussions" target="_blank" rel="noreferrer">Comentar en GitHub</a>
         <a className="boton" href="https://github.com/DecoTaco22/mufa" target="_blank" rel="noreferrer">Código en GitHub</a>
       </div>
     </Tarjeta>
