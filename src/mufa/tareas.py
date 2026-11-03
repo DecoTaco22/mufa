@@ -15,7 +15,17 @@ from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from mufa import actualizacion, alertas, copias, licencia, marcas, monitoreo, respaldos, servicios
+from mufa import (
+    actualizacion,
+    alertas,
+    copias,
+    licencia,
+    marcas,
+    monitoreo,
+    respaldos,
+    servicios,
+    topologia,
+)
 from mufa.cifrado import Cifrador
 from mufa.config import Ajustes
 from mufa.db import Equipo
@@ -31,6 +41,10 @@ _RESPALDOS_EN_PARALELO = 4
 _SEGUNDOS_ENTRE_RENOVACIONES = 6 * 3600
 # Buscar una versión nueva: una vez al día (la primera, al arrancar).
 _SEGUNDOS_ENTRE_BUSQUEDAS = 24 * 3600
+# El mapa (vecinos LLDP/CDP/MikroTik): una vez al día alcanza, los cables cambian poco.
+# La primera vez, 10 minutos después de arrancar, para no sumarla al primer sondeo.
+_SEGUNDOS_ENTRE_MAPAS = 24 * 3600
+_PRIMER_MAPA = 600
 
 
 class Programador:
@@ -52,6 +66,7 @@ class Programador:
         self._proximo_sondeo = 0.0
         self._proxima_renovacion = 0.0
         self._proxima_busqueda = 0.0
+        self._proximo_mapa = time.monotonic() + _PRIMER_MAPA
         # Un solo respaldo general a la vez (el programado o el de «Respaldar todo»).
         self._respaldando = threading.Lock()
 
@@ -81,6 +96,9 @@ class Programador:
             if minutos > 0 and ahora >= self._proximo_sondeo:
                 self._proximo_sondeo = ahora + minutos * 60
                 self._proteger(self.sondear_todos)
+            if minutos > 0 and ahora >= self._proximo_mapa:
+                self._proximo_mapa = ahora + _SEGUNDOS_ENTRE_MAPAS
+                self._proteger(self.actualizar_mapa)
             if self._ajustes.intervalo_respaldo_horas > 0:
                 self._proteger(self._respaldo_programado)
             if self._ajustes.enviar_alertas:
@@ -144,7 +162,13 @@ class Programador:
 
     def enviar_alertas(self) -> None:
         with self._sesiones() as db:
-            alertas.procesar_pendientes(db, self._cifrador)
+            silenciado = None
+            if self._pro.cargados:
+                plan, _aviso = licencia.plan_vigente(
+                    self._ajustes.dir_datos / "licencia.txt", licencia.hoy()
+                )
+                silenciado = self._pro.silenciador(db, plan)
+            alertas.procesar_pendientes(db, self._cifrador, silenciado=silenciado)
             db.commit()
 
     def _ids(self, *condiciones: object) -> list[int]:
@@ -163,6 +187,14 @@ class Programador:
             monitoreo.purgar_muestras(db, dias)
             self._pro.tarea_de_sondeo(db, plan, licencia.hoy())
             db.commit()
+
+    def actualizar_mapa(self) -> None:
+        """Lee los vecinos de cada equipo (solo lectura) para que el mapa no quede viejo."""
+        with self._sesiones() as db:
+            resultado = topologia.descubrir(db, self._cifrador)
+            db.commit()
+        if resultado.errores:
+            log.info("mapa: %d equipos sin vecinos leídos", len(resultado.errores))
 
     def _sondear(self, equipo_id: int) -> None:
         with self._sesiones() as db:

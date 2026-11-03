@@ -33,6 +33,14 @@ def servicios_en_texto_plano(ctx: Contexto) -> Hallazgo | None:
             " transport input ssh",
             "no ip http server",
         ]
+    elif ctx.marca == "huawei":
+        remediacion = [
+            "system-view",
+            "undo telnet server enable",
+            "undo http server enable",
+            "user-interface vty 0 4",
+            " protocol inbound ssh",
+        ]
     return Hallazgo(
         id="MUFA-SVC-001",
         severidad=Severidad.ALTO,

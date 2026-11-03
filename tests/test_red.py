@@ -486,6 +486,8 @@ def test_mtr_lee_los_saltos_y_los_tiempos() -> None:
     assert h.rtt_de_ping("Respuesta desde 1.1.1.1: bytes=32 tiempo=15ms TTL=57") == 15.0
     assert h.rtt_de_ping("Reply from 192.168.0.1: bytes=32 time<1ms TTL=64") == 0.5
     assert h.rtt_de_ping("Request timed out.") is None
+    # Windows en español: «tiempo<1m» cuando responde en menos de 1 ms.
+    assert h.rtt_de_ping("Respuesta desde 192.168.0.1: bytes=32 tiempo<1m TTL=64") == 0.5
 
 
 def test_mtr_informe_con_perdida(monkeypatch) -> None:  # type: ignore[no-untyped-def]

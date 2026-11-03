@@ -6,13 +6,14 @@ from pathlib import Path
 
 from mufa.marcas.base import Adaptador, Respaldador
 from mufa.marcas.cisco import CiscoIOS
+from mufa.marcas.huawei import HuaweiVRP
 from mufa.marcas.mikrotik import MikroTik
 from mufa.marcas.otras import OTRAS
 from mufa.models import Contexto
 from mufa.ssh import KNOWN_HOSTS, SesionSoloLectura
 
 ADAPTADORES: dict[str, Adaptador] = {
-    adaptador.marca: adaptador for adaptador in (MikroTik(), CiscoIOS())
+    adaptador.marca: adaptador for adaptador in (MikroTik(), CiscoIOS(), HuaweiVRP())
 }
 
 # Marcas que se pueden respaldar: las auditables y las que por ahora solo se respaldan.

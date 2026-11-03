@@ -52,6 +52,7 @@ interface Onu {
   distancia_m: number | null;
   cambio: string;
   senal_baja: boolean;
+  degradando: boolean;
 }
 
 const ESTADOS: Record<EstadoOnu, { texto: string; clase: string }> = {
@@ -125,6 +126,7 @@ function DetalleOlt({ olt, gestiona, onCambio }: { olt: OltInfo; gestiona: boole
   const parametros = new URLSearchParams();
   if (puerto !== null) parametros.set("puerto", String(puerto));
   if (filtro === "senal_baja") parametros.set("senal_baja", "true");
+  else if (filtro === "degradando") parametros.set("degradando", "true");
   else if (filtro) parametros.set("estado", filtro);
   if (buscar) parametros.set("q", buscar);
   const { datos: onus } = useDatos<Onu[]>(`/pro/olt/${olt.equipo_id}/onus?${parametros}`);
@@ -219,6 +221,7 @@ function DetalleOlt({ olt, gestiona, onCambio }: { olt: OltInfo; gestiona: boole
               <option value="sin_senal">Sin señal</option>
               <option value="sin_energia">Sin energía</option>
               <option value="senal_baja">Señal baja</option>
+              <option value="degradando">Señal que baja día a día</option>
             </select>
           </div>
         }
@@ -239,7 +242,10 @@ function DetalleOlt({ olt, gestiona, onCambio }: { olt: OltInfo; gestiona: boole
                     <span className={`pill ${ESTADOS[o.estado].clase}`}>{ESTADOS[o.estado].texto}</span>
                     {o.causa && <div className="tenue" style={{ fontSize: 12, marginTop: 4 }}>{o.causa}</div>}
                   </td>
-                  <td className={o.senal_baja ? "texto-alerta" : ""}>{dbm(o.rx_dbm)}</td>
+                  <td className={o.senal_baja ? "texto-alerta" : ""}>
+                    {dbm(o.rx_dbm)}
+                    {o.degradando && <div><span className="pill alto" title="La señal viene bajando cada día: revisa conectores y empalmes">Bajando</span></div>}
+                  </td>
                   <td className="tenue">{o.distancia_m === null ? "—" : `${(o.distancia_m / 1000).toLocaleString("es", { maximumFractionDigits: 2 })} km`}</td>
                   <td className="tenue">{hace(o.cambio)}</td>
                 </tr>

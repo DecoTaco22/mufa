@@ -146,6 +146,11 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # La imagen sale para PC/servidores (amd64) y para ARM (Raspberry Pi 4/5, servidores ARM).
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Imagen Docker
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -153,9 +158,7 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           imagen="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/mufa"
           echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker build -t "$imagen:$version" -t "$imagen:latest" .
-          docker push "$imagen:$version"
-          docker push "$imagen:latest"
+          docker buildx build --platform linux/amd64,linux/arm64             -t "$imagen:$version" -t "$imagen:latest" --push .
           echo "IMAGEN=$imagen:$version" >> "$GITHUB_ENV"
       - name: Paquete de servidor
         run: |

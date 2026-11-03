@@ -44,6 +44,7 @@ TIPOS: dict[str, str] = {
     "olt.corte_pon": "Se cayeron las ONU de un puerto PON",
     "olt.pon_recuperado": "Volvieron las ONU de un puerto PON",
     "onu.senal_baja": "Señal baja en una ONU",
+    "onu.senal_degradando": "La señal de una ONU baja día a día",
     "informe.error": "No se pudo mandar el informe mensual",
 }
 
@@ -150,9 +151,17 @@ def _secreto(canal: CanalAlerta, cifrador: Cifrador) -> str | None:
 
 
 def procesar_pendientes(
-    db: Session, cifrador: Cifrador, enviador: Enviador = enviar, lote: int = 200
+    db: Session,
+    cifrador: Cifrador,
+    enviador: Enviador = enviar,
+    lote: int = 200,
+    silenciado: Callable[[Evento], bool] | None = None,
 ) -> int:
-    """Avisa los eventos nuevos desde la última pasada. Devuelve cuántos avisos salieron."""
+    """Avisa los eventos nuevos desde la última pasada. Devuelve cuántos avisos salieron.
+
+    `silenciado` dice si un evento no se avisa (por ejemplo, un equipo en una
+    ventana de mantenimiento de Pro): igual queda en el registro.
+    """
     cursor = db.get(AjusteSistema, _CURSOR)
     if cursor is None:
         # Primera vez: no se avisa de todo lo que pasó antes de configurar alertas.
@@ -172,6 +181,8 @@ def procesar_pendientes(
     enviados = 0
     for evento in eventos:
         if evento.accion not in TIPOS:
+            continue
+        if silenciado is not None and silenciado(evento):
             continue
         for canal in canales:
             if evento.accion not in canal.eventos:

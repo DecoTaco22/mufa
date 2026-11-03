@@ -156,6 +156,15 @@ class ModulosPro:
             tarea: Callable[[Session, Any, date], None] = self._registro.despues_del_sondeo
             tarea(db, plan, hoy)
 
+    def silenciador(self, db: Session, plan: Any) -> Callable[[Any], bool] | None:
+        """Qué eventos no se avisan (ventanas de mantenimiento de Pro), o None."""
+        if self._registro is not None and hasattr(self._registro, "silenciador"):
+            crear: Callable[[Session, Any], Callable[[Any], bool] | None] = (
+                self._registro.silenciador
+            )
+            return crear(db, plan)
+        return None
+
     def tarea_frecuente(self, db: Session, plan: Any) -> None:
         """Lo que Pro revisa seguido (cada vuelta del programador, unos 15 segundos)."""
         if self._registro is not None and hasattr(self._registro, "cada_rato"):

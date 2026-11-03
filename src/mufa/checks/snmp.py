@@ -32,6 +32,12 @@ def comunidad_por_defecto(ctx: Contexto) -> Hallazgo | None:
     ]
     if ctx.marca == "cisco":
         remediacion = [f"no snmp-server community {nombre}" for nombre in debiles]
+    elif ctx.marca == "huawei":
+        remediacion = [
+            "system-view",
+            *(f"undo snmp-agent community {nombre}" for nombre in debiles),
+            "snmp-agent sys-info version v3",
+        ]
     return Hallazgo(
         id="MUFA-SNMP-001",
         severidad=Severidad.CRITICO if desde_internet else Severidad.ALTO,

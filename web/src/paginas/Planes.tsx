@@ -15,7 +15,9 @@ const FILAS: [string, string, string][] = [
   ["Avisos a cada persona del NOC con tu bot", "", "✓"],
   ["Escalamiento, guardias y «Lo tomo yo»", "", "✓"],
   ["Predicción de capacidad", "", "✓"],
-  ["OLT GPON (Huawei, ZTE)", "", "✓"],
+  ["OLT GPON (Huawei, ZTE) y aviso de señal que se degrada", "", "✓"],
+  ["Ventanas de mantenimiento", "", "✓"],
+  ["Página de estado para tus clientes", "", "✓"],
   ["Informes en PDF con tu logo", "", "✓"],
   ["Soporte", "Comunidad", "1 día hábil"],
 ];

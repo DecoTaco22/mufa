@@ -1,7 +1,8 @@
 # Imagen de mufa: el servidor con la API y la app web. HTTPS lo pone el proxy
 # (ver docker-compose.yml).
 
-FROM node:24-slim AS web
+# La app web es igual en todas las arquitecturas: se compila una vez, sin emular ARM.
+FROM --platform=$BUILDPLATFORM node:24-slim AS web
 WORKDIR /mufa/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci --no-fund --no-audit

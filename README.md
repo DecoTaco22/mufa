@@ -87,7 +87,7 @@ solución lista para copiar y por qué importa.
 
 **Marcas:** cualquiera con SNMP para monitoreo. Respaldos por SSH: MikroTik,
 Cisco, Huawei, Juniper, HPE / Aruba, Ubiquiti, Nokia y ZTE. Auditoría de
-seguridad: MikroTik RouterOS y Cisco IOS / IOS XE (se van sumando más).
+seguridad: MikroTik RouterOS, Cisco IOS / IOS XE y Huawei VRP (se van sumando más).
 
 ## Descargar
 
@@ -123,7 +123,7 @@ solo escucha en tu computadora: nadie más de la red puede entrar.
 
 ### En un servidor (para todo tu equipo, desde el navegador)
 
-Requisitos: Linux de 64 bits (Intel o AMD) con Docker y 2 GB de RAM, que
+Requisitos: Linux de 64 bits (Intel, AMD o ARM, como una Raspberry Pi 4 o 5) con Docker y 2 GB de RAM, que
 alcanzan para cientos de equipos. Sirve una VM en Proxmox o VMware, o un VPS.
 
 ```bash

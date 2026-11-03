@@ -141,3 +141,13 @@ def test_descubrir_por_la_api_pide_permiso_de_diagnostico(
     lectura = crear_usuario("lector", Rol.LECTURA)
     assert cliente.get(f"{API}/mapa", headers=lectura).status_code == 200
     assert cliente.post(f"{API}/mapa/descubrir", headers=lectura).status_code == 403
+
+
+def test_valores_que_empiezan_con_0x_no_rompen_el_mapa() -> None:
+    assert topologia._texto("0xnodo-sur") == "0xnodo-sur"
+    assert topologia._texto("0x123") == "0x123"
+    assert topologia._texto("0x0011223344AA") == "00:11:22:33:44:AA"
+    assert topologia._ip("0xZZZZZZZZ") == ""
+    assert topologia._ip("0x0a000001") == "10.0.0.1"
+    vecinos = topologia.vecinos_de({topologia.CDP_NOMBRE: {"x.1": "raro", "5.1": "0xSW"}})
+    assert [v.nombre for v in vecinos] == ["0xSW"]

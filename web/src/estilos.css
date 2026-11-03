@@ -1684,3 +1684,51 @@ tr.activa td { background: var(--sel); }
 @media (max-width: 900px) {
   .noc-paneles { grid-template-columns: 1fr; }
 }
+
+/* --- Página de estado pública (Pro) ------------------------------------- */
+.estado-publico {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.tarjeta .estado-publico { padding: 0; }
+.estado-publico h1 { margin: 0; font-size: 26px; }
+.estado-publico h2 { font-size: 15px; margin: 6px 0 10px; color: var(--tx2); }
+.estado-general {
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-weight: 600;
+  font-size: 16px;
+}
+.estado-general.ok { background: var(--okbg); color: var(--ok); }
+.estado-general.medio { background: var(--amabg); color: var(--ama); }
+.estado-general.critico { background: var(--rojobg); color: var(--rojo); }
+.estado-general.info { background: var(--sel); color: var(--infotx); }
+.estado-general.gris { background: var(--fill); color: var(--tx2); }
+.estado-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cardborde);
+}
+.estado-dias {
+  display: grid;
+  grid-template-columns: repeat(90, minmax(0, 1fr));
+  gap: 2px;
+  height: 30px;
+}
+.estado-dias i { border-radius: 2px; background: var(--fill); }
+.estado-dias i.ok { background: var(--ok); opacity: 0.85; }
+.estado-dias i.medio { background: var(--ama); }
+.estado-dias i.mal { background: var(--rojo); }
+.estado-item { padding: 8px 0; border-bottom: 1px solid var(--cardborde); }
+.estado-item .tenue { font-size: 13px; margin-top: 2px; }
+.estado-pie { font-size: 12px; text-align: center; }
+@media (max-width: 600px) {
+  .estado-dias { grid-template-columns: repeat(45, minmax(0, 1fr)); }
+  .estado-dias i:nth-child(-n + 45) { display: none; }
+}

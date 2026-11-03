@@ -10,6 +10,7 @@ import { EntradaOBienvenida } from "./paginas/Bienvenida";
 import { DosPasos } from "./paginas/DosPasos";
 import { EquipoDetalle } from "./paginas/EquipoDetalle";
 import { Equipos } from "./paginas/Equipos";
+import { PaginaEstadoPublica } from "./paginas/EstadoPublico";
 import { Fibra } from "./paginas/Fibra";
 import { Hallazgos } from "./paginas/Hallazgos";
 import { Herramientas } from "./paginas/Herramientas";
@@ -30,6 +31,14 @@ aplicarTema(temaGuardado());
 
 function Rutas() {
   const { usuario, cargando } = useSesion();
+  // La página de estado pública (Pro) la ven los clientes del ISP, sin sesión.
+  if (window.location.pathname.startsWith("/estado/")) {
+    return (
+      <Routes>
+        <Route path="estado/:codigo" element={<PaginaEstadoPublica />} />
+      </Routes>
+    );
+  }
   if (cargando) return <Cargando />;
   if (!usuario) return <EntradaOBienvenida />;
   // Los roles con poder sobre la red no usan la app sin el segundo paso.

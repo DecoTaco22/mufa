@@ -87,7 +87,8 @@ def test_listar_marcas(cliente: TestClient, admin: dict[str, str]) -> None:
         "con_adaptador": True,
         "con_respaldo": True,
     }
-    # Huawei todavía no se audita, pero sí se respalda.
-    assert por_marca["huawei"]["con_adaptador"] is False
-    assert por_marca["huawei"]["con_respaldo"] is True
+    # Huawei se audita y se respalda; Juniper por ahora solo se respalda.
+    assert por_marca["huawei"]["con_adaptador"] is True
+    assert por_marca["juniper"]["con_adaptador"] is False
+    assert por_marca["juniper"]["con_respaldo"] is True
     assert por_marca["otra"]["con_respaldo"] is False

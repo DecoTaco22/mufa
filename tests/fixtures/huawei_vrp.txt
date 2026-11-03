@@ -1,0 +1,37 @@
+!Software Version V200R019C10SPC500
+!Last configuration was updated at 2026-10-30 10:12:44-06:00
+#
+sysname AR-EJEMPLO
+#
+ info-center loghost 192.0.2.50
+#
+telnet server enable
+#
+http server enable
+http secure-server enable
+#
+aaa
+ local-user admin password irreversible-cipher $1a$xxxxxxxx$
+ local-user admin service-type ssh
+#
+interface GigabitEthernet0/0/0
+ ip address 198.51.100.2 255.255.255.252
+#
+snmp-agent
+snmp-agent community read public
+snmp-agent community write cipher %^%#abcdefghijklmnop%^%#
+snmp-agent sys-info version v2c v3
+#
+stelnet server enable
+#
+user-interface con 0
+ authentication-mode password
+user-interface vty 0 4
+ authentication-mode aaa
+ protocol inbound all
+user-interface vty 16 20
+ authentication-mode aaa
+ protocol inbound ssh
+ acl 2000 inbound
+#
+return

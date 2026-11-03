@@ -90,7 +90,10 @@ def _ip(valor: int | str | None) -> str:
     if not isinstance(valor, str):
         return ""
     if valor.startswith("0x") and len(valor) == 10:
-        return str(ipaddress.IPv4Address(bytes.fromhex(valor[2:])))
+        try:
+            return str(ipaddress.IPv4Address(bytes.fromhex(valor[2:])))
+        except ValueError:
+            return ""
     try:
         return str(ipaddress.ip_address(valor))
     except ValueError:
@@ -103,7 +106,10 @@ def _texto(valor: int | str | None) -> str:
     texto = str(valor)
     if texto.startswith("0x"):
         # Un ID de chasis o de puerto que es una MAC: se muestra como MAC.
-        datos = bytes.fromhex(texto[2:])
+        try:
+            datos = bytes.fromhex(texto[2:])
+        except ValueError:
+            return texto.strip()[:255]  # un nombre que empieza con «0x», no un valor binario
         return ":".join(f"{b:02X}" for b in datos) if len(datos) == 6 else ""
     return texto.strip()[:255]
 
@@ -153,6 +159,8 @@ def vecinos_de(tablas: dict[str, dict[str, int | str]]) -> list[VecinoLeido]:
 
     # CDP: índice ifIndex.índice.
     for sufijo, nombre in tablas.get(CDP_NOMBRE, {}).items():
+        if not sufijo.split(".")[0].isdigit():
+            continue
         if_index = int(sufijo.split(".")[0])
         vecinos.append(
             VecinoLeido(
@@ -225,6 +233,9 @@ def descubrir(
             return vecinos_de((leer or _leer)(equipo.ip_gestion, cred, COLUMNAS))
         except snmp.ErrorSNMP as error:
             return str(error)
+        except Exception as error:  # un equipo con datos raros no frena el mapa de los demás
+            log.exception("vecinos de %s", equipo.nombre)
+            return f"error al leer los vecinos: {error}"
 
     with ThreadPoolExecutor(max_workers=8) as grupo:
         leidos = list(grupo.map(leer_uno, pedidos))

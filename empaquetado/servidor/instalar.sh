@@ -16,8 +16,8 @@ falla() {
 
 # 1. Lo que hace falta ------------------------------------------------------
 case "$(uname -m)" in
-  x86_64 | amd64) ;;
-  *) falla "mufa todavía funciona solo en servidores de 64 bits Intel o AMD (x86_64); este es $(uname -m)." ;;
+  x86_64 | amd64 | aarch64 | arm64) ;;
+  *) falla "mufa funciona en servidores de 64 bits Intel o AMD (x86_64) o ARM (aarch64, como una Raspberry Pi 4 o 5 con sistema de 64 bits); este es $(uname -m)." ;;
 esac
 command -v docker >/dev/null 2>&1 ||
   falla "Falta Docker. Instálalo con:  curl -fsSL https://get.docker.com | sudo sh

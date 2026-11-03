@@ -1,6 +1,6 @@
 """Respaldos de las marcas que todavía no tienen auditoría.
 
-Para Huawei, Juniper, HPE, Ubiquiti, Nokia y ZTE mufa sabe sacar la
+Para Juniper, HPE, Ubiquiti, Nokia y ZTE mufa sabe sacar la
 configuración completa (solo lectura) y compararla entre versiones, pero
 todavía no la traduce al Contexto de las verificaciones.
 
@@ -67,12 +67,6 @@ class SoloRespaldo:
 
 
 OTRAS: tuple[SoloRespaldo, ...] = (
-    SoloRespaldo(
-        "huawei",
-        "Huawei VRP",
-        ("display current-configuration",),
-        re.compile(r"^\s*!(Software Version|Last configuration was|Time:|\s*Last )"),
-    ),
     SoloRespaldo(
         "juniper",
         "Juniper Junos",

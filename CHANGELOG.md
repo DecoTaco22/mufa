@@ -1,5 +1,30 @@
 # Cambios
 
+## v0.1.11
+
+- **Pro: ventanas de mantenimiento.** Programa el cambio de un equipo (o de
+  toda la red), una vez o todas las semanas a la misma hora: mientras dura,
+  esos equipos no mandan alertas ni avisos al equipo. Todo queda igual en el
+  registro, y un clic termina la ventana antes de tiempo.
+- **Pro: página de estado para tus clientes.** Una página pública con el
+  estado de cada zona, la disponibilidad de los últimos 90 días, las fallas
+  recientes y los mantenimientos que vienen. Muestra solo los nombres de zona
+  que elijas, nunca equipos ni IPs, y la dirección se cambia cuando quieras.
+- **Pro: señal óptica que se degrada.** mufa guarda la potencia de cada ONU
+  día a día y avisa cuando baja de forma sostenida y va a cruzar el umbral en
+  menos de un mes, antes de que el cliente se quede sin servicio. En OLT
+  GPON, filtro «Señal que baja día a día».
+- **Auditoría de Huawei VRP** (plan gratis): Telnet, SSH, HTTP, comunidades
+  SNMP, NTP y logs, con el arreglo en comandos de VRP.
+- **Servidor en ARM:** la imagen Docker sale también para ARM de 64 bits
+  (Raspberry Pi 4 o 5, servidores ARM), y el instalador los acepta.
+- El mapa de la red se actualiza solo una vez al día.
+- **Arreglos:** el MTR en Windows en español mostraba 100 % de pérdida en los
+  saltos de la red local («tiempo<1m»); un vecino con un nombre que empieza
+  con «0x» frenaba el mapa de todos los equipos.
+- **Seguridad:** dnspython 2.9.1 y pyasn1 0.6.5 (corrigen 5 vulnerabilidades
+  conocidas; pyasn1 lo usa SNMP), y el resto de las dependencias al día.
+
 ## v0.1.10
 
 - **Seguridad:** opentelemetry-api 1.45.1 (la trae FastAPI; corrige

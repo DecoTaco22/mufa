@@ -237,7 +237,8 @@ def puerto(destino: str, numero: int, tiempo_maximo: float = 3.0) -> Salida:
 
 # --- MTR: traceroute + ping a cada salto, varias rondas --------------------------
 
-_TIEMPO_PING = re.compile(r"(?:time|tiempo)\s*([=<])\s*([\d.,]+)\s*ms", re.IGNORECASE)
+# Windows en español escribe «tiempo<1m» (sin la s) cuando es menos de 1 ms.
+_TIEMPO_PING = re.compile(r"(?:time|tiempo)\s*([=<])\s*([\d.,]+)\s*ms?\b", re.IGNORECASE)
 
 
 @dataclass

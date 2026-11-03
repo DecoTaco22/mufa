@@ -50,7 +50,7 @@ Los pedidos de ambos llegan por el formulario del sitio (tipos «servicio» y
 | Historial de tráfico | 7 días | 1 año | a medida |
 | **Monitoreo** SNMPv3 multimarca, caídas, reinicios, disponibilidad | ✓ | ✓ | ✓ |
 | Datos del equipo por SNMP (serie, modelo, versión) | ✓ | ✓ | ✓ |
-| **Auditoría** de seguridad, versiones con CVE, puntaje | ✓ | ✓ | ✓ |
+| **Auditoría** de seguridad (MikroTik, Cisco, Huawei), versiones con CVE, puntaje | ✓ | ✓ | ✓ |
 | **Respaldos** diarios cifrados, diferencias, buscador | ✓ | ✓ | ✓ |
 | **IPAM y VLANs**, importados de los equipos | ✓ | ✓ | ✓ |
 | **Fibra óptica**: presupuesto, dispersión, PON, potencia de SFP | ✓ | ✓ | ✓ |
@@ -59,13 +59,13 @@ Los pedidos de ambos llegan por el formulario del sitio (tipos «servicio» y
 | Alertas con bot y correo propios | ✓ | ✓ | ✓ |
 | **Avisos al equipo** con el bot propio: contactos y grupos | | ✓ | ✓ |
 | Escalamiento, guardias, "Lo tomo yo" | | ✓ | ✓ |
-| Ventanas de mantenimiento *(próximamente)* | | ✓ | ✓ |
+| Ventanas de mantenimiento | | ✓ | ✓ |
 | Predicción de capacidad | | ✓ | ✓ |
-| Alertas de potencia óptica por tendencia *(próximamente)* | | ✓ | ✓ |
+| Alertas de potencia óptica por tendencia | | ✓ | ✓ |
 | OLT GPON (Huawei, ZTE) | | ✓ | ✓ |
 | Consumo por cliente (NetFlow) *(próximamente)* | | ✓ | ✓ |
 | Informes en PDF con su logo | | ✓ | ✓ |
-| Página de estado pública *(próximamente)* | | ✓ | ✓ |
+| Página de estado pública | | ✓ | ✓ |
 | Integración con WispHub y Mikrowisp *(próximamente)* | | ✓ | ✓ |
 | Respaldo externo cifrado *(próximamente)* | | ✓ | ✓ |
 | Restauración de configuraciones *(próximamente)* | | ✓ | ✓ |

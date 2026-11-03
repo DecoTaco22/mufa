@@ -6,7 +6,9 @@ import type { Licencia } from "../tipos";
 import { useDatos } from "../util";
 import { Avisos } from "./Avisos";
 import { Capacidad } from "./Capacidad";
+import { EstadoPublico } from "./EstadoPublico";
 import { Informes } from "./Informes";
+import { Mantenimiento } from "./Mantenimiento";
 import { OltGpon } from "./Olt";
 
 // El sitio redirige /apoyar, /fundador y /pro a Ko-fi; así la app no cambia si cambia la cuenta.
@@ -88,10 +90,51 @@ export const MODULOS: Record<string, Modulo> = {
     pasos: ["Agregas la OLT con SNMP.", "mufa descubre los puertos PON y las ONU.", "Ves la señal de cada cliente y recibes avisos."],
     para: "ISPs de fibra con OLT Huawei MA5600T/MA5800 o ZTE C300/C320.",
   },
+  mantenimiento: {
+    titulo: "Ventanas de mantenimiento",
+    frase: "Que el NOC no reciba alertas de lo que ya sabe.",
+    resumen:
+      "Programa el cambio de un equipo o una tarea de todas las semanas: mientras dura la ventana, esos equipos no mandan alertas ni avisos al equipo. Todo queda igual en el registro.",
+    color: "#64d2ff",
+    vista: VistaMantenimiento,
+    beneficios: [
+      { icono: "silencio", titulo: "Sin falsas alarmas", texto: "El reinicio programado del core no despierta a nadie a las 3 a. m." },
+      { icono: "calendario", titulo: "Cada semana", texto: "Una ventana que se repite: «los domingos de 3:00 a 5:00 se actualizan las antenas»." },
+      { icono: "equipo", titulo: "Por equipo o toda la red", texto: "Solo los equipos que se tocan; el resto sigue avisando." },
+      { icono: "reloj", titulo: "Terminar ya", texto: "Si el trabajo termina antes, un clic y las alertas vuelven." },
+    ],
+    pasos: ["Eliges los equipos y el horario.", "mufa silencia sus alertas mientras dura.", "Al terminar, todo vuelve a avisar solo."],
+    para: "Cualquier ISP que hace cambios programados y no quiere que el NOC se acostumbre a ignorar alertas.",
+  },
+  estado: {
+    titulo: "Página de estado",
+    frase: "Tus clientes ven si hay una falla antes de llamar.",
+    resumen:
+      "Una página pública con el estado de cada zona, la disponibilidad de los últimos 90 días, las fallas recientes y los mantenimientos que vienen. Sin nombres ni IPs de tus equipos.",
+    color: "#ff375f",
+    vista: VistaEstadoPro,
+    beneficios: [
+      { icono: "usuarios", titulo: "Menos llamadas", texto: "Cuando hay una falla, el cliente lo ve en la página y no satura el soporte." },
+      { icono: "grafica", titulo: "90 días", texto: "La disponibilidad de cada zona, día a día, como las páginas de estado de los grandes." },
+      { icono: "calendario", titulo: "Mantenimientos", texto: "Los trabajos programados se anuncian solos." },
+      { icono: "candado", titulo: "Sin datos internos", texto: "Solo nombres de zona que eliges. La dirección se cambia cuando quieras." },
+    ],
+    pasos: ["Agrupas tus equipos por zona o servicio.", "Publicas la página.", "Compartes el enlace con tus clientes."],
+    para: "ISPs que quieren dar una imagen profesional y bajar las llamadas al soporte en una caída.",
+  },
 };
 
 // Los módulos que ya existen: con un plan que los incluye se muestran en vez de su presentación.
-const DISPONIBLES: Record<string, () => ReactNode> = { avisos: Avisos, capacidad: Capacidad, informes: Informes, olt: OltGpon };
+const DISPONIBLES: Record<string, () => ReactNode> = {
+  avisos: Avisos,
+  capacidad: Capacidad,
+  informes: Informes,
+  olt: OltGpon,
+  mantenimiento: Mantenimiento,
+  estado: EstadoPublico,
+};
+// La función de la licencia que habilita cada módulo, cuando no se llama igual que la ruta.
+const FUNCION: Record<string, string> = { estado: "estado_publico" };
 
 export function PaginaPro() {
   const { modulo = "" } = useParams();
@@ -100,7 +143,7 @@ export function PaginaPro() {
   if (!m) return <Encabezado titulo="mufa Pro" />;
   const Modulo = DISPONIBLES[modulo];
   if (Modulo && cargando && !licencia) return <Cargando />;
-  if (Modulo && licencia?.funciones.includes(modulo)) return <Modulo />;
+  if (Modulo && licencia?.funciones.includes(FUNCION[modulo] ?? modulo)) return <Modulo />;
   const Vista = m.vista;
   return (
     <div className="pro-pagina" style={{ ["--pro" as string]: m.color }}>
@@ -160,7 +203,7 @@ export function ResumenPro() {
       <div>
         <span className="insignia-pro">Pro</span>
         <h2>Todo lo del plan gratis, para un ISP que no puede perderse una falla.</h2>
-        <p className="tenue">Equipos y usuarios ilimitados, un año de historial y cuatro módulos pensados para operar en equipo.</p>
+        <p className="tenue">Equipos y usuarios ilimitados, un año de historial y seis módulos pensados para operar en equipo.</p>
       </div>
       <div className="pro-resumen-grilla">
         {Object.entries(MODULOS).map(([clave, m]) => {
@@ -226,6 +269,34 @@ function VistaCapacidad() {
         <text x="150" y="104" fill="currentColor" opacity=".5" fontSize="9">hoy</text>
         <text x="200" y="104" fill="currentColor" opacity=".5" fontSize="9">+6 sem</text>
       </svg>
+    </div>
+  );
+}
+
+function VistaMantenimiento() {
+  return (
+    <div className="maqueta grafica">
+      <div className="grafica-cabeza"><strong>Actualizar el core</strong><span className="pill info">En curso</span></div>
+      <div className="papel-lineas"><i /><i style={{ width: "70%" }} /></div>
+      <div className="burbuja sistema" style={{ marginTop: 12 }}>🔕 3 alertas en silencio · CCR Core</div>
+      <div className="burbuja sistema">Domingos 03:00 – 05:00 · Antenas Norte</div>
+    </div>
+  );
+}
+
+function VistaEstadoPro() {
+  const dias = Array.from({ length: 30 }, (_, i) => (i === 21 ? "mal" : i === 9 ? "medio" : "ok"));
+  return (
+    <div className="maqueta grafica">
+      <div className="grafica-cabeza"><strong>Estado del servicio</strong><span className="pill ok">Funcionando</span></div>
+      {["Zona Norte", "Zona Sur"].map((zona) => (
+        <div key={zona} style={{ marginTop: 10 }}>
+          <div className="entre" style={{ fontSize: 12 }}><span>{zona}</span><span>99,98 %</span></div>
+          <div className="estado-dias" style={{ gridTemplateColumns: "repeat(30, 1fr)", height: 18 }}>
+            {dias.map((c, i) => <i key={i} className={c} />)}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

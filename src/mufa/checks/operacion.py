@@ -12,6 +12,12 @@ def sin_ntp(ctx: Contexto) -> Hallazgo | None:
         return None
     if ctx.marca == "cisco":
         remediacion = ["ntp server <ip-del-servidor-ntp>", "clock timezone CST -6 0"]
+    elif ctx.marca == "huawei":
+        remediacion = [
+            "system-view",
+            "ntp-service unicast-server <ip-del-servidor-ntp>",
+            "clock timezone CST minus 06:00:00",
+        ]
     else:
         remediacion = [
             "# RouterOS 7:",
@@ -40,6 +46,8 @@ def sin_log_remoto(ctx: Contexto) -> Hallazgo | None:
         return None
     if ctx.marca == "cisco":
         remediacion = ["logging host <ip-del-servidor-syslog>", "logging trap informational"]
+    elif ctx.marca == "huawei":
+        remediacion = ["system-view", "info-center loghost <ip-del-servidor-syslog>"]
     else:
         remediacion = [
             "/system logging action set [ find name=remote ] remote=<ip-del-servidor-syslog>",

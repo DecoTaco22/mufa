@@ -33,6 +33,8 @@ const SECCIONES: { titulo: string | null; enlaces: Enlace[] }[] = [
       { ruta: "/pro/informes", icono: "documento", texto: "Informes PDF", pro: true },
       { ruta: "/pro/capacidad", icono: "grafica", texto: "Capacidad", pro: true },
       { ruta: "/pro/olt", icono: "enchufe", texto: "OLT GPON", pro: true },
+      { ruta: "/pro/mantenimiento", icono: "silencio", texto: "Mantenimiento", pro: true },
+      { ruta: "/pro/estado", icono: "estrella", texto: "Página de estado", pro: true },
     ],
   },
   {

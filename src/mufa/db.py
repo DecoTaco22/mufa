@@ -438,6 +438,26 @@ class OnuGpon(Base):
     visto: Mapped[datetime] = mapped_column(default=ahora)
     # Ya se avisó la señal baja (se vuelve a avisar al recuperarse 1 dB).
     aviso_senal: Mapped[bool] = mapped_column(default=False)
+    # Ya se avisó que la señal baja día a día (mufa.pro.potencia).
+    aviso_tendencia: Mapped[bool] = mapped_column(default=False, server_default=false())
+
+
+class PotenciaOnuDiaria(Base):
+    """La potencia que recibió una ONU en un día: para ver si se degrada con el tiempo."""
+
+    __tablename__ = "potencia_onu_diaria"
+    __table_args__ = (UniqueConstraint("onu_id", "dia", name="uq_potencia_onu_diaria"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    onu_id: Mapped[int] = mapped_column(ForeignKey("onus_gpon.id", ondelete="CASCADE"))
+    dia: Mapped[date] = mapped_column(index=True)
+    muestras: Mapped[int] = mapped_column(default=0)
+    suma_rx: Mapped[float] = mapped_column(default=0.0)
+    min_rx: Mapped[float]
+
+    @property
+    def promedio(self) -> float:
+        return self.suma_rx / self.muestras if self.muestras else self.min_rx
 
 
 class ContactoNoc(Base):
