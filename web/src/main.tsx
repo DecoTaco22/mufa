@@ -28,13 +28,16 @@ import { Vlans } from "./paginas/Vlans";
 import { ProveedorDeSesion, useSesion } from "./sesion";
 import { aplicarTema, temaGuardado } from "./tema";
 
+// En la demo del sitio la app vive en /demo/; instalada, en la raíz.
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 aplicarTema(temaGuardado());
 iniciarIdioma();
 
 function Rutas() {
   const { usuario, cargando } = useSesion();
   // La página de estado pública (Pro) la ven los clientes del ISP, sin sesión.
-  if (window.location.pathname.startsWith("/estado/")) {
+  if (window.location.pathname.startsWith(`${BASE}/estado/`)) {
     return (
       <Routes>
         <Route path="estado/:codigo" element={<PaginaEstadoPublica />} />
@@ -76,7 +79,7 @@ function Rutas() {
 
 createRoot(document.getElementById("raiz")!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={BASE || undefined}>
       <ProveedorDeSesion>
         <Rutas />
       </ProveedorDeSesion>

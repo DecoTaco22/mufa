@@ -1,5 +1,14 @@
 # Cambios
 
+## v0.1.13
+
+- **Demo en vivo:** la app completa con la red de un ISP de ejemplo, en
+  mufa.pages.dev/demo, sin instalar nada. Y un video de un minuto en el sitio.
+- **Arreglo (Pro):** en Consumo por cliente, los botones para sumar redes del
+  IPAM no aparecían.
+- Scripts para regenerar la demo y el video (`scripts/datos_demo.py`,
+  `scripts/capturar_demo.py`, `scripts/video_demo.py`).
+
 ## v0.1.12
 
 - **mufa en inglés** (issue #10): la app sale en el idioma del navegador y se

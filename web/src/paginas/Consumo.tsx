@@ -151,7 +151,7 @@ function DetalleCliente({ ip }: { ip: string }) {
 }
 
 function Configurar({ inicial, gestiona, onGuardado }: { inicial: Ajustes; gestiona: boolean; onGuardado: () => void }) {
-  const { datos: prefijos } = useDatos<{ prefijo: string; descripcion: string }[]>("/prefijos");
+  const { datos: prefijos } = useDatos<{ prefijo: string; descripcion: string }[]>("/ipam/prefijos");
   const [activo, setActivo] = useState(inicial.activo);
   const [puerto, setPuerto] = useState(String(inicial.puerto));
   const [redes, setRedes] = useState(inicial.redes.join("\n"));

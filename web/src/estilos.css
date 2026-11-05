@@ -1732,3 +1732,13 @@ tr.activa td { background: var(--sel); }
   .estado-dias { grid-template-columns: repeat(45, minmax(0, 1fr)); }
   .estado-dias i:nth-child(-n + 45) { display: none; }
 }
+
+/* Demo del sitio (mufa.pages.dev/demo) */
+.aviso-demo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}

@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "tipos": "tsc -b"
+    "tipos": "tsc -b",
+    "demo": "tsc -b && vite build --mode demo"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",

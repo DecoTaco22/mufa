@@ -172,7 +172,7 @@ function Configurar({ inicial, onGuardado }: { inicial: Ajustes; onGuardado: () 
   const [titulo, setTitulo] = useState(inicial.titulo);
   const [mensaje, setMensaje] = useState(inicial.mensaje);
   const [grupos, setGrupos] = useState<Grupo[]>(inicial.grupos.length ? inicial.grupos : [{ nombre: "", equipo_ids: [] }]);
-  const enlace = `${window.location.origin}/estado/${inicial.codigo}`;
+  const enlace = `${window.location.origin}${import.meta.env.BASE_URL}estado/${inicial.codigo}`;
 
   const cambiarGrupo = (n: number, cambio: Partial<Grupo>) => setGrupos(grupos.map((g, i) => (i === n ? { ...g, ...cambio } : g)));
 

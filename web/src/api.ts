@@ -1,5 +1,6 @@
 // Cliente de la API de mufa. La sesión va en una cookie HttpOnly: este código
 // nunca ve el token. Todo cambio lleva la cabecera anti-CSRF.
+import { DEMO, ErrorDemo, responderDemo } from "./demo";
 
 export class ErrorApi extends Error {
   constructor(
@@ -34,6 +35,14 @@ function mensajeDeError(detalle: unknown, estado: number): string {
 
 export async function api<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
   const metodo = opciones.metodo ?? "GET";
+  if (DEMO) {
+    try {
+      return (await responderDemo(ruta, metodo)) as T;
+    } catch (e) {
+      if (e instanceof ErrorDemo) throw new ErrorApi(e.message, e.estado, new Headers());
+      throw e;
+    }
+  }
   const cabeceras: Record<string, string> = { "X-Mufa-Cliente": "web" };
   if (metodo !== "GET") cabeceras["X-Mufa-Csrf"] = "1";
   let cuerpo: BodyInit | undefined;
@@ -90,6 +99,9 @@ export async function transmitir(
   alLlegar: (texto: string) => void,
   senal?: AbortSignal,
 ): Promise<void> {
+  if (DEMO) {
+    throw new ErrorApi("Las herramientas en vivo corren desde tu servidor: instala mufa gratis para usarlas con tu red.", 409, new Headers());
+  }
   const respuesta = await fetch(`/api/v1${ruta}`, {
     method: "POST",
     headers: { "X-Mufa-Cliente": "web", "X-Mufa-Csrf": "1", "Content-Type": "application/json" },

@@ -3,6 +3,7 @@ import { Icono, type NombreIcono } from "./Icono";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import { cambiarIdioma, IDIOMA, type Idioma } from "../i18n";
+import { DEMO, DESCARGAR } from "../demo";
 import { useSesion } from "../sesion";
 import { aplicarTema, type Tema, temaGuardado } from "../tema";
 import { NOMBRES_DE_ROL, type Permiso, puede } from "../util";
@@ -131,7 +132,14 @@ export function Marco() {
 
       {/* La clave reinicia la animación de entrada en cada cambio de página. */}
       <main className="contenido" key={ubicacion.pathname}>
-        <AvisoActualizacion />
+        {DEMO ? (
+          <div className="aviso info aviso-demo">
+            <span>Estás viendo una <strong>demo con datos de ejemplo</strong>: así se ve mufa con tu red.</span>
+            <a className="boton primario chico" href={DESCARGAR}>Descargar gratis</a>
+          </div>
+        ) : (
+          <AvisoActualizacion />
+        )}
         <Outlet />
       </main>
     </div>
