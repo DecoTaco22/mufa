@@ -1,5 +1,11 @@
 # Cambios
 
+## v0.1.14
+
+- FastAPI 0.162, SQLAlchemy 2.1.8 y ruff 0.17.4 al día.
+- Los scripts de la demo quedan ejecutables, y una prueba avisa si un script
+  con shebang no lo es (el CI fallaba por eso).
+
 ## v0.1.13
 
 - **Demo en vivo:** la app completa con la red de un ISP de ejemplo, en
